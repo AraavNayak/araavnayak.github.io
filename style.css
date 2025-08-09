@@ -61,6 +61,60 @@ body {
     margin-bottom: 4rem;
 }
 
+.main-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.name-title {
+    font-size: clamp(4rem, 4vw, 5rem);
+    text-align: center;
+    margin-bottom: 1rem;
+    font-weight: bold;
+}
+
+.profile-section {
+    display: flex;
+    align-items: center;
+    gap: clamp(2rem, 5vw, 4rem);
+    width: 100%;
+    max-width: 900px;
+    margin-bottom: 3rem;
+}
+
+.profile-image {
+    flex-shrink: 0;
+    border-radius: 5px;
+    border: 3px solid white;
+    width: clamp(250px, 30vw, 400px);
+    height: auto;
+    max-width: 100%;
+}
+
+.profile-text {
+    flex: 1;
+    min-width: 0; /* Prevents text overflow */
+    padding-left: 1rem;
+}
+
+.subtitle {
+    font-size: clamp(1.5rem, 4vw, 2rem);
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.description {
+    font-size: clamp(1rem, 2.5vw, 1.5rem);
+    color: #a0aec0;
+    font-weight: 400;
+}
+
 .intro {
     padding-top: 2rem;
 }
@@ -169,85 +223,67 @@ body {
 
 .bottom-nav {
     position: fixed;
-    bottom: 2rem;
+    bottom: 30px;
     left: 50%;
     transform: translateX(-50%);
     display: flex;
-    gap: 1rem;
-    background: rgba(15, 23, 42, 0.6);
-    border: 1px solid rgba(59, 130, 246, 0.3);
-    border-radius: 16px;
-    padding: 1rem;
-    backdrop-filter: blur(15px);
-    z-index: 10;
+    gap: 15px;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(10px);
+    padding: 15px;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .nav-btn {
-    width: 48px;
-    height: 48px;
-    background: rgba(59, 130, 246, 0.1);
-    border: 1px solid rgba(59, 130, 246, 0.3);
-    border-radius: 12px;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
+    width: 50px;
+    height: 50px;
+    background: rgba(59, 130, 246, 0.8);
+    border-radius: 12px;
     cursor: pointer;
     transition: all 0.3s ease;
-    color: #64748b;
+    overflow: hidden;
+    position: relative;
 }
 
 .nav-btn:hover {
-    background: rgba(59, 130, 246, 0.2);
-    border-color: rgba(59, 130, 246, 0.5);
-    transform: translateY(-2px);
+    width: 70px;
+    height: 70px;
+    background: rgba(59, 130, 246, 1);
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(59, 130, 246, 0.4);
 }
 
-.nav-btn.active {
-    background: #3b82f6;
-    color: white;
-    border-color: #3b82f6;
-}
-
-
-.bottom-nav {
-    position: fixed;
-    bottom: 2rem;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    gap: 1rem;
-    background: rgba(15, 23, 42, 0.6);
-    border: 1px solid rgba(59, 130, 246, 0.3);
-    border-radius: 16px;
-    padding: 1rem;
-    backdrop-filter: blur(15px);
-    z-index: 10;
-}
-
-.nav-btn {
-    width: 48px;
-    height: 48px;
-    background: rgba(59, 130, 246, 0.1);
-    border: 1px solid rgba(59, 130, 246, 0.3);
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
+.nav-btn svg {
+    fill: white;
     transition: all 0.3s ease;
-    color: #64748b;
+    margin-bottom: 0;
 }
 
-.nav-btn:hover {
-    background: rgba(59, 130, 246, 0.2);
-    border-color: rgba(59, 130, 246, 0.5);
-    transform: translateY(-2px);
+.nav-btn:hover svg {
+    transform: scale(1.1);
+    margin-bottom: 5px;
 }
 
-.nav-btn.active {
-    background: #3b82f6;
+.nav-label {
     color: white;
-    border-color: #3b82f6;
+    font-size: 10px;
+    font-weight: 600;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.3s ease;
+    position: absolute;
+    bottom: 8px;
+    white-space: nowrap;
+}
+
+.nav-btn:hover .nav-label {
+    opacity: 1;
+    transform: translateY(0);
 }
 
 
@@ -404,4 +440,26 @@ a:visited,
 a:hover,
 a:active {
   color: currentColor; /* Or any specific blue color code, e.g., #0000FF */
+}
+
+
+.typewriter {
+    overflow: hidden;
+    white-space: nowrap;
+    border-right: .10em solid orange; /* The typewriter cursor */
+    animation: typing 3.5s steps(30, end), blink-caret .5s step-end infinite 3.5s, remove-cursor 0s 4s forwards;
+}
+
+@keyframes remove-cursor {
+    to { border-right: none; }
+}
+
+@keyframes typing {
+    from { width: 0 }
+    to { width: 100% }
+}
+
+@keyframes blink-caret {
+    from, to { border-color: transparent }
+    50% { border-color: orange }
 }
