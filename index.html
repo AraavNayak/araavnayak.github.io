@@ -15,24 +15,6 @@
     <body>
         <main id="home-page">
 
-            <!-- <div style="position: relative;">
-                <h1 style="text-align: center; font-size: 5rem; margin-top: 300px; z-index: 2;">Araav Nayak</h1>
-                <img src="media/araav.png" style="position: absolute; top: -300px; left: 100px; z-index: 1;">
-            </div> -->
-            <!-- <img src="media/araav.png" style="float: left; margin-top: -350px; margin-left: 100px; margin-bottom: 100px; border-radius: 5px; border: 3px solid black;">
-            
-            <h1 style="position:absolute; font-size: 2rem; left: 700px;">Budding Computer Scientist</h1>
-            <h1 style="margin-top: 50px; position: absolute; font-size: 1.5rem; left: 700px; color: gray;">CS & DS @ UC Berkeley</h1> -->
-
-            <!-- <h1 style="text-align: center; font-size: 5rem; margin-top: 270px; margin-left: 400px;">Araav Nayak</h1>
-
-            <div style="display: flex; align-items: center; gap: 50px; margin: -20% 10% 10% 10%">
-    <img src="media/araav.png" style="border-radius: 5px; border: 3px solid white;">
-    <div>
-        <h1 style="font-size: 2rem; margin: 0;">Budding Computer Scientist</h1>
-        <h1 style="font-size: 1.5rem; color: gray; margin: 10px 0 0 0;">CS & DS @ UC Berkeley</h1>
-    </div>
-</div> -->
 
             <div class="main-container">
                 
@@ -50,38 +32,7 @@
 
             <div class="bottom-nav" style="position: fixed; bottom: 20px;">
 
-                <!-- <div class="nav-btn active" title="Home">
-                        <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/>
-                        </svg>
-                </div>
-                <div class="nav-btn" title="About">
-                    <a href="about.html" onclick="showAbout()">
-                        <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd"/>
-                        </svg>
-                    </a>
-                </div>
-                <div class="nav-btn" title="Experience">
-                    <a href="experience.html" onclick="showExperience()">
-                        <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M6 6V5a3 3 0 013-3h2a3 3 0 013 3v1h2a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V8a2 2 0 012-2h2zm2-1a1 1 0 011-1h2a1 1 0 011 1v1H8V5zM9 13a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1z" clipRule="evenodd"/>
-                        </svg>
-                    </a>
-                </div>
-                <div class="nav-btn">
-                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
-                        <path fillRule="evenodd" d="M4 5a2 2 0 012-2v1a2 2 0 002 2h6a2 2 0 002-2V3a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3z" clipRule="evenodd"/>
-                    </svg>
-                </div>
-                <div class="nav-btn">
-                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd"/>
-                    </svg>
-                </div> -->
-
-                <div class="nav-btn" href="index.html">
+                <div class="nav-btn-active" href="index.html">
                     <svg width="20" height="20" viewBox="0 0 20 20">
                         <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/>
                     </svg>
@@ -106,6 +57,17 @@
                     <span class="nav-label">Experience</span>
                 </div>
 
+                <div class="nav-btn">
+                    <a href="projects.html">
+                    <svg width="20" height="20" viewBox="0 0 20 20">
+                        <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
+                        <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
+                    </svg>
+                    </a>
+                    <span class="nav-label">Projects</span>
+                </div>
+
+                
                 <div class="nav-btn" onclick="showContact()">
                     <a href="contact.html">
                     <svg width="20" height="20" viewBox="0 0 20 20">
