@@ -355,7 +355,7 @@ body {
 
 .image-card-small {
     width: 100%;
-    height: 250px; /* or whatever height you want */
+    height: 250px; 
     overflow: hidden; /* prevents image from overflowing */
     margin-bottom: 10px;
     
@@ -363,7 +363,7 @@ body {
 
 .image-card-small img {
     width: 100%;
-    height: 100%;
+    height: 250px;
     object-fit: fill; /* this will now work to stretch/distort the image */
     border-radius: 10px;
 }
