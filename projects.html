@@ -116,7 +116,7 @@
     "image": "media/projects/mh.png",
     "title": "MobilityHub",
     "date": "Sep 2021 - Nov 2021",
-    "description": "iOS medical service finder app that utilizes NLP to recommend medical centers from user-specified symptoms or conditions based on relevance and proximity.",
+    "description": "iOS medical service finder app that utilizes NLP to recommend medical centers from user-specified symptoms or conditions based on relevance and proximity. Developed in a hackathon.",
     "tags": ["Swift", "CoreLocations"],
     "github": "",
     "demo": ""
@@ -125,7 +125,7 @@
     "image": "media/projects/skib.png",
     "title": "SKIB",
     "date": "Mar 2021 - Aug 2021",
-    "description": "Generative AI-based approach to getting better at public speaking with LLM feedback, audio transcription, and Fast Fourier.",
+    "description": "Generative AI-based approach to getting better at public speaking with LLM feedback, audio transcription, and Fast Fourier. Developed in a hackathon.",
     "tags": ["Python", "Flask", "Tailwind"],
     "github": "",
     "demo": ""
@@ -143,7 +143,7 @@
     "image": "media/projects/v.png",
     "title": "VisionARy",
     "date": "Mar 2021 - Aug 2021",
-    "description": "Tool for helping people test their eyesight, choosing glasses they like, and trying them out in AR.",
+    "description": "Tool for helping people test their eyesight, choosing glasses they like, and trying them out in AR. Developed in a hackathon.",
     "tags": ["Python", "OpenCV", "HTML/CSS"],
     "github": "",
     "demo": ""
@@ -152,7 +152,7 @@
     "image": "media/projects/ffa.png",
     "title": "Food4All",
     "date": "Mar 2021 - Aug 2021",
-    "description": "Tool for communication between food donors and volunteers who are willing to deliver the food to people in need.",
+    "description": "Tool for communication between food donors and volunteers who are willing to deliver the food to people in need. Developed in a hackathon.",
     "tags": ["HTML/CSS", "Javascript"],
     "github": "",
     "demo": ""
@@ -221,7 +221,7 @@
         const container = document.getElementById('projects-container');
         
         const projectsHTML = projects.map(project => `
-            <div class="education-card-small expandable-card">
+            <div class="education-card-small expandable-card" id="project-card">
                 <div class="image-card-small">
                     <img src="${project.image}" style="margin-bottom: 10px; object-fit: fill; width: 100%; height: 100%;" alt="${project.title}">
                 </div>
