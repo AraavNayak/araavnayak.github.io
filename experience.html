@@ -203,9 +203,20 @@
                     </div>
                 </div>
 
-                <p class="degree">
-                    <p style="margin-left: 60px; line-height: 26px;">Self-learned how to play the guitar during the pandemic. I enjoy strumming the guitar in my free time and jamming with friends in guitar clubs. I've progressed from following tutorials for basic chords to figuring out percussive arrangements for songs by ear.</p>
-                </p>
+                <div class="degree">
+                    <p style="margin-left: 60px; line-height: 26px;">Self-learned how to play the guitar during the pandemic. I enjoy strumming the guitar in my free time and jamming with friends in guitar clubs. I've progressed from following tutorials to figuring out arrangements for songs by ear.</p>
+                </div>
+                
+                <a href="https://www.youtube.com/@araavnayak3560" target="_blank" rel="noopener noreferrer" class="button" style="text-decoration: none; color: rgb(59, 131, 246); margin-left: 60px;">
+                    <svg width="20" height="20" viewBox="0 0 24 24">
+                    <path d="M18 13V19C18 19.5304 17.7893 20.0391 17.4142 20.4142C17.0391 20.7893 16.5304 21 16 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V8C3 7.46957 3.21071 6.96086 3.58579 6.58579C3.96086 6.21071 4.46957 6 5 6H11" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M15 3H21V9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M10 14L21 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    View YouTube channel
+                </a>
+
+
                 </div>
                 
                 <div class="education-card-small">
@@ -213,17 +224,17 @@
                     
                     <div class="education-header">
                     <!-- <img src="media/yt.png" style="width: 48px; height: 48px; border-radius: 4px;"> -->
-                    <svg width="48" height="48" fill="currentColor" viewBox="0 0 20 20">
-    <path d="M4 4a2 2 0 00-2 2v6a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm0 2h12v6H4V6zm-2 8a1 1 0 000 2h16a1 1 0 100-2H2z"/>
-                    </svg>
-                    <div class="education-info">
-                        <h3>Project Euler</h3>
-                        <p>June 2022 - present</p>
+                        <svg width="48" height="48" fill="currentColor" viewBox="0 0 20 20">
+        <path d="M4 4a2 2 0 00-2 2v6a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm0 2h12v6H4V6zm-2 8a1 1 0 000 2h16a1 1 0 100-2H2z"/>
+                        </svg>
+                        <div class="education-info">
+                            <h3>Coding</h3>
+                            <p>June 2022 - present</p>
+                        </div>
                     </div>
-                </div>
 
                 <p class="degree">
-                    <p style="margin-left: 60px; line-height: 26px;">I like developing algorithms to solve challenging computational math problems in my free time.</p>
+                    <p style="margin-left: 60px; line-height: 26px;">I like developing algorithms to solve challenging computational problems in my free time. My favorite platforms for coding are Project Euler and <Kbd></Kbd>aggle.</p>
                 </p>
 
                 </div>
@@ -347,100 +358,66 @@
 
         <div style="margin-top:100px;"></div>
 
-
-
-
-        <div class="bottom-nav">
+        <div class="bottom-nav" style="z-index: 100;">
 
             <div class="nav-btn" href="index.html">
-                <a href="index.html">
+                <a href="index.html" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; text-decoration: none; z-index: 1;">
+                    <span style="visibility: hidden;">Home</span>
+                </a>
                 <svg width="20" height="20" viewBox="0 0 20 20">
                     <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/>
                 </svg>
-                </a>
                 <span class="nav-label">Home</span>
             </div>
 
             <div class="nav-btn">
-                <a href="about.html">
+                <a href="about.html" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; text-decoration: none; z-index: 1;">
+                    <span style="visibility: hidden;">About</span>
+                </a>
                 <svg width="20" height="20" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd"/>
                 </svg>
-                </a>
                 <span class="nav-label">About</span>
             </div>
 
-            <div class="nav-btn-active" onclick="showPortfolio()">
-                <a href="experience.html">
+            <div class="nav-btn-active">
+                <a href="experience.html" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; text-decoration: none; z-index: 1;">
+                    <span style="visibility: hidden;">Experience</span>
+                </a>
                 <svg width="20" height="20" viewBox="0 0 24 24">
                     <path fillRule="evenodd" d="M6 6V5a3 3 0 013-3h2a3 3 0 013 3v1h2a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V8a2 2 0 012-2h2zm2-1a1 1 0 011-1h2a1 1 0 011 1v1H8V5zM9 13a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1z" clipRule="evenodd"/>
                 </svg>
-                </a>
                 <span class="nav-label">Experience</span>
             </div>
 
-            <div class="nav-btn" onclick="showContact()">
-                <a href="projects.html">
-                <svg width="20" height="20" viewBox="0 0 20 20">
-                    <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
-                    <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
-                </svg>
+            <div class="nav-btn">
+                <a href="projects.html" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; text-decoration: none; z-index: 1;">
+                    <span style="visibility: hidden;">Projects</span> 
                 </a>
-                <span class="nav-label">Projects</span>
-            </div>
-
-
-            <div class="nav-btn" onclick="showContact()">
-                <a href="contact.html">
                 <svg width="20" height="20" viewBox="0 0 20 20">
-                    <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
-                    <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
+                    <path d="M2 4a2 2 0 012-2h3.5a1 1 0 01.8.4l1.4 1.8a1 1 0 00.8.4H16a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V4z"/>
+                    <path d="M7 9l-1.5 1L7 11M13 9l1.5 1L13 11" stroke="currentcolor" stroke-width="1.2" fill="none"/>
                 </svg>
-                </a>
-                <span class="nav-label">Contact</span>
+                
+                <span class="nav-label" style="z-index: 0; pointer-events: none;">Projects</span>
             </div>
-
 
             
-            <!-- <div class="nav-btn" title="Home">
-                <span><a href="index.html" onclick="showHome()">
-                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/>
-                    </svg>
-                    
-                </a></span>
-            </div>
-            <div class="nav-btn" title="About">
-                <a href="about.html" onclick="showAbout()">
-                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd"/>
-                    </svg>
-                </a>
-            </div>
-            <div class="nav-btn active">
-
-                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M6 6V5a3 3 0 013-3h2a3 3 0 013 3v1h2a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V8a2 2 0 012-2h2zm2-1a1 1 0 011-1h2a1 1 0 011 1v1H8V5zM9 13a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1z" clipRule="evenodd"/>
-                    </svg>
-                
-            </div>
             <div class="nav-btn">
-                <a href="projects.html">
-
-                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
-                        <path fillRule="evenodd" d="M4 5a2 2 0 012-2v1a2 2 0 002 2h6a2 2 0 002-2V3a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3z" clipRule="evenodd"/>
-                    </svg>
+                <a href="contact.html" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; text-decoration: none; z-index: 1;">
+                    <span style="visibility: hidden;">Contact</span>
                 </a>
-            </div>
-            <div class="nav-btn">
-                <a href="contact.html"></a>
-                <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd"/>
+                <svg width="20" height="20" viewBox="0 0 20 20" style="z-index: 0; pointer-events: none;">
+                    <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
+                    <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
                 </svg>
-            </a>
-            </div> -->
+                <span class="nav-label" style="z-index: 0; pointer-events: none;">Contact</span>
+            </div>
         </div>
+
+
+        
+
     </body>
 
 
@@ -471,4 +448,6 @@
             btnTextCollapse.style.display = 'inline';
         }
     }
+
+   
 </script>

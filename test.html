@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Projects Battle Deck</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0a1428 0%, #1a2332 50%, #2a3441 100%);
+            height: 100vh;
+            color: #e2e8f0;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Battle arena background */
+        .arena-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.1;
+            background-image: 
+                radial-gradient(circle at 25% 25%, #4facfe 0%, transparent 50%),
+                radial-gradient(circle at 75% 75%, #7c3aed 0%, transparent 50%);
+            animation: arenaGlow 8s ease-in-out infinite alternate;
+        }
+
+        @keyframes arenaGlow {
+            0% { opacity: 0.1; transform: scale(1); }
+            100% { opacity: 0.2; transform: scale(1.1); }
+        }
+
+        .container {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Main battle area */
+        .battle-area {
+            flex: 1;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .project-display {
+            width: 100%;
+            max-width: 900px;
+            height: 500px;
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.95) 100%);
+            border: 2px solid #4facfe;
+            border-radius: 20px;
+            backdrop-filter: blur(20px);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            overflow: hidden;
+        }
+
+        .project-display.active {
+            transform: scale(1.02);
+            box-shadow: 0 25px 50px rgba(79, 172, 254, 0.3);
+        }
+
+        .project-header {
+            padding: 2rem 2rem 1rem;
+            border-bottom: 1px solid rgba(79, 172, 254, 0.2);
+            position: relative;
+        }
+
+        .project-title {
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 800;
+            background: linear-gradient(135deg, #4facfe 0%, #00d4ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+
+        .project-subtitle {
+            color: #94a3b8;
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+        }
+
+        .project-type-badge {
+            position: absolute;
+            top: 1.5rem;
+            right: 2rem;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .type-web { background: linear-gradient(135deg, #10b981, #059669); }
+        .type-mobile { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+        .type-ai { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .type-game { background: linear-gradient(135deg, #ef4444, #dc2626); }
+
+        .project-content {
+            flex: 1;
+            padding: 1rem 2rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            align-items: start;
+        }
+
+        .project-info {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .project-description {
+            font-size: 1rem;
+            line-height: 1.6;
+            color: #cbd5e1;
+        }
+
+        .tech-stack {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+
+        .tech-tag {
+            padding: 0.5rem 1rem;
+            background: rgba(79, 172, 254, 0.15);
+            border: 1px solid rgba(79, 172, 254, 0.3);
+            border-radius: 15px;
+            color: #4facfe;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .tech-tag:hover {
+            background: rgba(79, 172, 254, 0.25);
+            transform: scale(1.05);
+        }
+
+        .project-stats {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            background: rgba(79, 172, 254, 0.1);
+            border-radius: 10px;
+            border-left: 3px solid #4facfe;
+        }
+
+        .stat-label {
+            color: #94a3b8;
+            font-size: 0.9rem;
+        }
+
+        .stat-value {
+            color: #4facfe;
+            font-weight: 700;
+        }
+
+        .project-actions {
+            padding: 1rem 2rem 2rem;
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+
+        .action-btn {
+            padding: 0.75rem 2rem;
+            background: linear-gradient(135deg, #4facfe 0%, #00d4ff 100%);
+            border: none;
+            border-radius: 25px;
+            color: white;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(79, 172, 254, 0.4);
+        }
+
+        .action-btn:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        .action-btn:hover:before {
+            left: 100%;
+        }
+
+        /* Card deck at bottom */
+        .card-deck {
+            height: 180px;
+            background: linear-gradient(135deg, rgba(10, 20, 40, 0.95) 0%, rgba(20, 30, 50, 0.95) 100%);
+            border-top: 2px solid rgba(79, 172, 254, 0.3);
+            backdrop-filter: blur(20px);
+            padding: 1rem;
+            overflow-x: auto;
+            overflow-y: hidden;
+            position: relative;
+        }
+
+        .deck-cards {
+            display: flex;
+            gap: 1rem;
+            height: 100%;
+            padding: 0.5rem 0;
+        }
+
+        .deck-card {
+            min-width: 120px;
+            width: 120px;
+            height: 140px;
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(51, 65, 85, 0.9) 100%);
+            border: 2px solid rgba(79, 172, 254, 0.2);
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            padding: 0.75rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .deck-card:hover {
+            transform: translateY(-10px) scale(1.05);
+            border-color: #4facfe;
+            box-shadow: 0 15px 30px rgba(79, 172, 254, 0.3);
+        }
+
+        .deck-card.selected {
+            transform: translateY(-15px) scale(1.1);
+            border-color: #4facfe;
+            background: linear-gradient(135deg, rgba(79, 172, 254, 0.2) 0%, rgba(0, 212, 255, 0.2) 100%);
+            box-shadow: 0 20px 40px rgba(79, 172, 254, 0.4);
+        }
+
+        .card-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: white;
+        }
+
+        .card-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #f8fafc;
+            text-align: center;
+            line-height: 1.2;
+            margin-bottom: 0.25rem;
+        }
+
+        .card-type {
+            font-size: 0.6rem;
+            color: #64748b;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .card-energy {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            width: 25px;
+            height: 25px;
+            background: linear-gradient(135deg, #7c3aed, #a855f7);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: 800;
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        /* Initial state */
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #64748b;
+            text-align: center;
+        }
+
+        .empty-state h3 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #4facfe 0%, #00d4ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .empty-state p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            max-width: 400px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .battle-area {
+                padding: 1rem;
+            }
+
+            .project-display {
+                height: 400px;
+                max-width: 100%;
+            }
+
+            .project-content {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+                padding: 1rem;
+            }
+
+            .project-header {
+                padding: 1.5rem 1rem 1rem;
+            }
+
+            .project-actions {
+                padding: 1rem;
+                flex-direction: column;
+            }
+
+            .deck-card {
+                min-width: 100px;
+                width: 100px;
+                height: 120px;
+            }
+
+            .card-deck {
+                height: 160px;
+            }
+        }
+
+        /* Scroll indicator for deck */
+        .deck-scroll-hint {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(79, 172, 254, 0.8);
+            color: white;
+            padding: 0.5rem;
+            border-radius: 8px;
+            font-size: 0.7rem;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.8; }
+            50% { opacity: 0.4; }
+        }
+    </style>
+</head>
+<body>
+    <div class="arena-bg"></div>
+    
+    <div class="container">
+        <!-- Main Battle Area -->
+        <div class="battle-area">
+            <div class="project-display" id="projectDisplay">
+                <div class="empty-state">
+                    <h3>Choose a Project</h3>
+                    <p>Select a card from the project deck below to view detailed information.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card Deck -->
+        <div class="card-deck">
+            <div class="deck-cards" id="deckCards">
+                <!-- Project Cards -->
+                <div class="deck-card" data-project="takedowntobaccoapp">
+                    <div class="card-icon type-web">📊</div>
+                    <div class="card-title">Take Down Tobacco App</div>
+                    <div class="card-type">iOS app</div>
+                </div>
+
+                <div class="deck-card" data-project="apcsattendanceapp">
+                    <div class="card-icon type-mobile">💪</div>
+                    <div class="card-title">P3 APCS Attendance App</div>
+                    <div class="card-type">iOS app</div>
+                </div>
+
+                <div class="deck-card" data-project="mobilityhub">
+                    <div class="card-icon type-ai">🧠</div>
+                    <div class="card-title">MobilityHub</div>
+                    <div class="card-type">iOS app</div>
+                </div>
+
+                <div class="deck-card" data-project="skib">
+                    <div class="card-icon type-game">⚛️</div>
+                    <div class="card-title">SKIB</div>
+                    <div class="card-type">Python</div>
+                </div>
+
+                <div class="deck-card" data-project="visionary">
+                    <div class="card-icon type-web">🎨</div>
+                    <div class="card-title">VisionARy</div>
+                    <div class="card-type">Python/Web</div>
+                </div>
+
+                <div class="deck-card" data-project="food4all">
+                    <div class="card-icon type-ai">🎤</div>
+                    <div class="card-title">Food4All</div>
+                    <div class="card-type">Web</div>
+                </div>
+
+                <div class="deck-card" data-project="frcscoutapp">
+                    <div class="card-icon type-web">₿</div>
+                    <div class="card-title">FRCScout App - FRC Scouting Utility</div>
+                    <div class="card-type">iOS app</div>
+                </div>
+
+                <div class="deck-card" data-project="instagram">
+                    <div class="card-icon type-mobile">🌤️</div>
+                    <div class="card-title">Instagram Unfollower Report</div>
+                    <div class="card-type">JavaScript</div>
+                </div>
+
+                <div class="deck-card" data-project="molarmass">
+                    <div class="card-icon type-ai">💬</div>
+                    <div class="card-title">Molar Mass Calculator</div>
+                    <div class="card-type">Java</div>
+                </div>
+
+                <div class="deck-card" data-project="ocrfilesearch">
+                    <div class="card-icon type-web">🛒</div>
+                    <div class="card-title">OCR Based File Search Utility</div>
+                    <div class="card-type">Python</div>
+                </div>
+
+                <div class="deck-card" data-project="objectdetection">
+                    <div class="card-icon type-game">🥽</div>
+                    <div class="card-title">Applied ML Object Detection</div>
+                    <div class="card-type">Python</div>
+                </div>
+            </div>
+            <div class="deck-scroll-hint">← Scroll →</div>
+        </div>
+    </div>
+
+    <script>
+        // Project data
+        const projects = {
+            takedowntobaccoapp: {
+                title: "Take Down Tobacco App",
+                subtitle: "Real-time analytics & data visualization platform",
+                type: "web",
+                description: "This app educates and empowering users to reject tobacco consumption by providing comprehensive statistics on tobacco’s harmful effects and promoting tobacco avoidance by offering incentives and achievement badges for staying tobacco-free, ultimately fostering a tobacco-free lifestyle.",
+                tech: ["Swift"],
+                stats: [
+                    { label: "Performance", value: "98/100" },
+                    { label: "Users", value: "5,000+" },
+                    { label: "Uptime", value: "99.9%" },
+                    { label: "Load Time", value: "< 2s" }
+                ],
+                links: [
+                    { text: "View Live Demo", url: "#" },
+                    { text: "GitHub Repository", url: "#" }
+                ]
+            },
+            apcsattendanceapp: {
+                title: "Fitness Tracker Pro",
+                subtitle: "AI-powered cross-platform fitness companion",
+                type: "mobile",
+                description: "Cross-platform mobile app for comprehensive fitness tracking with AI-powered workout recommendations, social features, and advanced health analytics. Includes offline support and wearable device integration.",
+                tech: ["React Native", "Firebase", "ML Kit", "Redux", "SQLite", "HealthKit"],
+                stats: [
+                    { label: "Downloads", value: "50K+" },
+                    { label: "Rating", value: "4.8/5" },
+                    { label: "Retention", value: "85%" },
+                    { label: "Daily Users", value: "12K+" }
+                ],
+                links: [
+                    { text: "App Store", url: "#" },
+                    { text: "Google Play", url: "#" }
+                ]
+            },
+            "ai-review": {
+                title: "Smart Code Review",
+                subtitle: "AI-powered automated code analysis system",
+                type: "ai",
+                description: "Revolutionary AI system that automatically detects bugs, suggests improvements, and ensures coding standards compliance. Trained on millions of lines of code across multiple programming languages with advanced ML algorithms.",
+                tech: ["Python", "TensorFlow", "FastAPI", "Docker", "PostgreSQL", "Redis"],
+                stats: [
+                    { label: "Accuracy", value: "94%" },
+                    { label: "Time Saved", value: "60%" },
+                    { label: "Languages", value: "12+" },
+                    { label: "Code Analyzed", value: "50M+ lines" }
+                ],
+                links: [
+                    { text: "Try Demo", url: "#" },
+                    { text: "Research Paper", url: "#" }
+                ]
+            },
+            quantum: {
+                title: "Quantum Puzzle",
+                subtitle: "Educational quantum physics puzzle game",
+                type: "game",
+                description: "Mind-bending puzzle game that teaches quantum physics principles through interactive gameplay and stunning 3D visualizations. Created in collaboration with physics professors to ensure scientific accuracy.",
+                tech: ["Unity", "C#", "Shader Graph", "WebGL", "Blender", "Physics Engine"],
+                stats: [
+                    { label: "Players", value: "25K+" },
+                    { label: "Levels", value: "100+" },
+                    { label: "Completion", value: "78%" },
+                    { label: "Learning Score", value: "92%" }
+                ],
+                links: [
+                    { text: "Play Now", url: "#" },
+                    { text: "Physics Guide", url: "#" }
+                ]
+            },
+            canvas: {
+                title: "Collaborative Canvas",
+                subtitle: "Real-time collaborative drawing platform",
+                type: "web",
+                description: "Advanced real-time collaborative drawing platform with custom brush engines, layer management, team workspace features, and conflict resolution for simultaneous editing by multiple users.",
+                tech: ["Vue.js", "WebRTC", "Canvas API", "Socket.io", "WebGL", "Node.js"],
+                stats: [
+                    { label: "Concurrent Users", value: "100+" },
+                    { label: "Latency", value: "< 50ms" },
+                    { label: "Drawings Created", value: "10K+" },
+                    { label: "Teams", value: "500+" }
+                ],
+                links: [
+                    { text: "Try Live", url: "#" },
+                    { text: "Architecture Docs", url: "#" }
+                ]
+            },
+            voice: {
+                title: "Voice Command Suite",
+                subtitle: "Advanced voice recognition for smart homes",
+                type: "ai",
+                description: "Cutting-edge voice recognition system with custom wake word detection and natural language processing for smart home automation. Privacy-first design with all processing on edge devices.",
+                tech: ["PyTorch", "Whisper", "NLTK", "Raspberry Pi", "TensorRT", "ONNX"],
+                stats: [
+                    { label: "Accuracy", value: "97%" },
+                    { label: "Response Time", value: "< 200ms" },
+                    { label: "Languages", value: "8+" },
+                    { label: "Commands", value: "1000+" }
+                ],
+                links: [
+                    { text: "Demo Video", url: "#" },
+                    { text: "Edge AI Blog", url: "#" }
+                ]
+            }
+            // Add more projects as needed
+        };
+
+        // Initialize
+        const deckCards = document.querySelectorAll('.deck-card');
+        const projectDisplay = document.getElementById('projectDisplay');
+        let selectedCard = null;
+
+        // Card selection handler
+        deckCards.forEach(card => {
+            card.addEventListener('click', () => {
+                // Remove previous selection
+                if (selectedCard) {
+                    selectedCard.classList.remove('selected');
+                }
+
+                // Select new card
+                card.classList.add('selected');
+                selectedCard = card;
+
+                // Get project data
+                const projectId = card.dataset.project;
+                const project = projects[projectId];
+
+                if (project) {
+                    displayProject(project);
+                    projectDisplay.classList.add('active');
+                }
+            });
+        });
+
+        function displayProject(project) {
+            const typeClass = `type-${project.type}`;
+            
+            projectDisplay.innerHTML = `
+                <div class="project-header">
+                    <div class="project-type-badge ${typeClass}">${project.type.toUpperCase()}</div>
+                    <h2 class="project-title">${project.title}</h2>
+                    <p class="project-subtitle">${project.subtitle}</p>
+                </div>
+                <div class="project-content">
+                    <div class="project-info">
+                        <p class="project-description">${project.description}</p>
+                        <div class="tech-stack">
+                            ${project.tech.map(tech => `<span class="tech-tag">${tech}</span>`).join('')}
+                        </div>
+                    </div>
+                    <div class="project-stats">
+                        ${project.stats.map(stat => `
+                            <div class="stat-item">
+                                <span class="stat-label">${stat.label}</span>
+                                <span class="stat-value">${stat.value}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                <div class="project-actions">
+                    ${project.links.map(link => `
+                        <a href="${link.url}" class="action-btn">${link.text}</a>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        // Auto-select first project for demo
+        setTimeout(() => {
+            deckCards[0].click();
+        }, 1000);
+    </script>
+</body>
+</html>

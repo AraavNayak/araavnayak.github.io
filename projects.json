@@ -1,0 +1,110 @@
+[
+  {
+    "image": "media/projects/tdt.png",
+    "title": "Take Down Tobacco App",
+    "date": "Dec 2021 - present",
+    "description": "App designed to help solve the crisis of widespread ignorance of harm caused by tobacco among teens and the lack of incentivization to avoid consuming tobacco.",
+    "tags": ["Swift", "MapKit"],
+    "github": "",
+    "demo": ""
+  },
+  {
+    "image": "media/projects/apcsapp.png",
+    "title": "P3 APCS Attendance App",
+    "date": "Jan 2022 - May 2022",
+    "description": "Customizable iOS app for making attendance more easier especially when students may not be sitting in their assigned seat.",
+    "tags": ["Swift"],
+    "github": "",
+    "demo": ""
+  },
+  {
+    "image": "media/projects/mh.png",
+    "title": "MobilityHub",
+    "date": "Sep 2021 - Nov 2021",
+    "description": "iOS medical service finder app that utilizes NLP to recommend medical centers from user-specified symptoms or conditions based on relevance and proximity.",
+    "tags": ["Swift", "CoreLocations"],
+    "github": "",
+    "demo": ""
+  },
+  {
+    "image": "media/projects/skib.png",
+    "title": "SKIB",
+    "date": "Mar 2021 - Aug 2021",
+    "description": "Unique approach to getting better at public speaking with LLM feedback, audio transcription, and Fast Fourier.",
+    "tags": ["Python", "Flask", "Tailwind"],
+    "github": "",
+    "demo": ""
+  },
+  {
+    "image": "media/projects/frc.png",
+    "title": "FRC Scouting website",
+    "date": "Mar 2021 - Aug 2021",
+    "description": "Collaborative project management tool with real-time updates and team collaboration features.",
+    "tags": ["HTML/CSS", "Javascript"],
+    "github": "",
+    "demo": ""
+  },
+  {
+    "image": "media/projects/v.png",
+    "title": "VisionARy",
+    "date": "Mar 2021 - Aug 2021",
+    "description": "Tool for helping people test their eyesight, choosing glasses they like, and trying them out in AR.",
+    "tags": ["Python", "OpenCV", "HTML/CSS"],
+    "github": "",
+    "demo": ""
+  },
+  {
+    "image": "media/projects/ffa.png",
+    "title": "Food4All",
+    "date": "Mar 2021 - Aug 2021",
+    "description": "Tool for communication between food donors and volunteers who are willing to deliver the food to people in need.",
+    "tags": ["HTML/CSS", "Javascript"],
+    "github": "",
+    "demo": ""
+  },
+  {
+    "image": "media/projects/frcapp.png",
+    "title": "FRCScout App",
+    "date": "Mar 2021 - Aug 2021",
+    "description": "Allows teams to efficiently collect and store scoring, speed, and measurement data of other teams during competitions without wifi.",
+    "tags": ["Swift", "FirebaseDB"],
+    "github": "",
+    "demo": ""
+  },
+  {
+    "image": "media/projects/ig.png",
+    "title": "Instagram Unfollower Report",
+    "date": "Mar 2021 - Aug 2021",
+    "description": "Give users a list of people who don't follow them back and people they don't follow back on Instagram.",
+    "tags": ["GraphQL", "Javascript"],
+    "github": "",
+    "demo": ""
+  },
+  {
+    "image": "media/projects/mm.jpeg",
+    "title": "Molar Mass Calculator",
+    "date": "Mar 2021 - Aug 2021",
+    "description": "Calculates the molar mass of a given compound. Works for an element, binary compound, and multiple compounds.",
+    "tags": ["Java"],
+    "github": "",
+    "demo": ""
+  },
+  {
+    "image": "media/projects/ocr.png",
+    "title": "OCR Based File Search Utility",
+    "date": "Mar 2021 - Aug 2021",
+    "description": "Looks through the files of a directory for user-specified string queries. Then creates a new folder with result files.",
+    "tags": ["Python"],
+    "github": "",
+    "demo": ""
+  },
+  {
+    "image": "media/projects/amod.png",
+    "title": "Applied ML Object Detection",
+    "date": "Mar 2021 - Aug 2021",
+    "description": "Object detection program for self-driving cars developed with YOLOv5 and OpenCV",
+    "tags": ["Python", "YOLOv5", "OpenCV"],
+    "github": "",
+    "demo": ""
+  }
+]

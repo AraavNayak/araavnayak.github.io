@@ -4,68 +4,247 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
-    <link rel="stylesheet" href="style.css">  
-
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     
+    <h2 style="margin-top: 60px; margin-left: 50px; font-size: 40px; ">Projects</h2>
+
+        <div class="container" style="padding-bottom: 50px;">
+            <div class="prior-education">
+                <div class="prior-education-grid" id="projects-container" style="justify-content: center;">
+                    <!--Content is loaded from js script-->
+                    
+                </div>
+            </div>
+            
+        </div>
 
 
-    <h1>Projects</h1>
 
 
 
-    <div class="bottom-nav">
 
-            <div class="nav-btn" href="index.html">
-                <a href="index.html">
+
+        <div class="bottom-nav" style="z-index: 100;">
+
+            <div class="nav-btn">
+                <a href="index.html" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; text-decoration: none; z-index: 1;">
+                    <span style="visibility: hidden;">Home</span>
+                </a>
                 <svg width="20" height="20" viewBox="0 0 20 20">
                     <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/>
                 </svg>
-                </a>
                 <span class="nav-label">Home</span>
             </div>
 
             <div class="nav-btn">
-                <a href="about.html">
+                <a href="about.html" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; text-decoration: none; z-index: 1;">
+                    <span style="visibility: hidden;">About</span>
+                </a>
                 <svg width="20" height="20" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd"/>
                 </svg>
-                </a>
                 <span class="nav-label">About</span>
             </div>
 
-            <div class="nav-btn" onclick="showPortfolio()">
-                <a href="experience.html">
+            <div class="nav-btn">
+                <a href="experience.html" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; text-decoration: none; z-index: 1;">
+                    <span style="visibility: hidden;">Experience</span>
+                </a>
                 <svg width="20" height="20" viewBox="0 0 24 24">
                     <path fillRule="evenodd" d="M6 6V5a3 3 0 013-3h2a3 3 0 013 3v1h2a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V8a2 2 0 012-2h2zm2-1a1 1 0 011-1h2a1 1 0 011 1v1H8V5zM9 13a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1z" clipRule="evenodd"/>
                 </svg>
-                </a>
                 <span class="nav-label">Experience</span>
             </div>
 
-            <div class="nav-btn-active" onclick="showContact()">
-                <a href="projects.html">
+            <div class="nav-btn-active">
+                <a href="projects.html" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; text-decoration: none; z-index: 1;">
+                    <span style="visibility: hidden;">Projects</span> 
+                </a>
                 <svg width="20" height="20" viewBox="0 0 20 20">
+                    <path d="M2 4a2 2 0 012-2h3.5a1 1 0 01.8.4l1.4 1.8a1 1 0 00.8.4H16a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V4z"/>
+                    <path d="M7 9l-1.5 1L7 11M13 9l1.5 1L13 11" stroke="currentcolor" stroke-width="1.2" fill="none"/>
+                </svg>
+                
+                <span class="nav-label" style="z-index: 0; pointer-events: none;">Projects</span>
+            </div>
+
+            
+            <div class="nav-btn">
+                <a href="contact.html" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; text-decoration: none; z-index: 1;">
+                    <span style="visibility: hidden;">Contact</span>
+                </a>
+                <svg width="20" height="20" viewBox="0 0 20 20" style="z-index: 0; pointer-events: none;">
                     <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
                     <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
                 </svg>
-                </a>
-                <span class="nav-label">Projects</span>
+                <span class="nav-label" style="z-index: 0; pointer-events: none;">Contact</span>
             </div>
-
-            <div class="nav-btn" onclick="showContact()">
-                <a href="contact.html">
-                <svg width="20" height="20" viewBox="0 0 20 20">
-                    <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
-                    <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>                </svg>
-                </a>
-                <span class="nav-label">Contact</span>
-            </div>
-
-
         </div>
+
+
 
 
 </body>
 </html>
+
+
+<script>
+
+
+    const projects = [
+  {
+    "image": "media/projects/tdt.png",
+    "title": "Take Down Tobacco App",
+    "date": "Dec 2021 - present",
+    "description": "App designed to help solve the crisis of widespread ignorance of harm caused by tobacco among teens and the lack of incentivization to avoid consuming tobacco.",
+    "tags": ["Swift", "MapKit"],
+    "github": "",
+    "demo": ""
+  },
+  {
+    "image": "media/projects/apcsapp.png",
+    "title": "P3 APCS Attendance App",
+    "date": "Jan 2022 - May 2022",
+    "description": "Customizable iOS app for making attendance more easier especially when students may not be sitting in their assigned seat.",
+    "tags": ["Swift"],
+    "github": "",
+    "demo": ""
+  },
+  {
+    "image": "media/projects/mh.png",
+    "title": "MobilityHub",
+    "date": "Sep 2021 - Nov 2021",
+    "description": "iOS medical service finder app that utilizes NLP to recommend medical centers from user-specified symptoms or conditions based on relevance and proximity.",
+    "tags": ["Swift", "CoreLocations"],
+    "github": "",
+    "demo": ""
+  },
+  {
+    "image": "media/projects/skib.png",
+    "title": "SKIB",
+    "date": "Mar 2021 - Aug 2021",
+    "description": "Generative AI-based approach to getting better at public speaking with LLM feedback, audio transcription, and Fast Fourier.",
+    "tags": ["Python", "Flask", "Tailwind"],
+    "github": "",
+    "demo": ""
+  },
+  {
+    "image": "media/projects/frc.png",
+    "title": "FRC Scouting website",
+    "date": "Mar 2021 - Aug 2021",
+    "description": "Collaborative project management tool with real-time updates and team collaboration features.",
+    "tags": ["HTML/CSS", "Javascript"],
+    "github": "",
+    "demo": ""
+  },
+  {
+    "image": "media/projects/v.png",
+    "title": "VisionARy",
+    "date": "Mar 2021 - Aug 2021",
+    "description": "Tool for helping people test their eyesight, choosing glasses they like, and trying them out in AR.",
+    "tags": ["Python", "OpenCV", "HTML/CSS"],
+    "github": "",
+    "demo": ""
+  },
+  {
+    "image": "media/projects/ffa.png",
+    "title": "Food4All",
+    "date": "Mar 2021 - Aug 2021",
+    "description": "Tool for communication between food donors and volunteers who are willing to deliver the food to people in need.",
+    "tags": ["HTML/CSS", "Javascript"],
+    "github": "",
+    "demo": ""
+  },
+  {
+    "image": "media/projects/frcapp.png",
+    "title": "FRCScout App",
+    "date": "Mar 2021 - Aug 2021",
+    "description": "Allows teams to efficiently collect and store scoring, speed, and measurement data of other teams during competitions without wifi.",
+    "tags": ["Swift", "FirebaseDB"],
+    "github": "",
+    "demo": ""
+  },
+  {
+    "image": "media/projects/ig.png",
+    "title": "Instagram Unfollower Report",
+    "date": "Mar 2021 - Aug 2021",
+    "description": "Give users a list of people who don't follow them back and people they don't follow back on Instagram.",
+    "tags": ["GraphQL", "Javascript"],
+    "github": "",
+    "demo": ""
+  },
+  {
+    "image": "media/projects/mm.jpeg",
+    "title": "Molar Mass Calculator",
+    "date": "Mar 2021 - Aug 2021",
+    "description": "Calculates the molar mass of a given compound. Works for an element, binary compound, and multiple compounds.",
+    "tags": ["Java"],
+    "github": "",
+    "demo": ""
+  },
+  {
+    "image": "media/projects/ocr.png",
+    "title": "OCR Based File Search Utility",
+    "date": "Mar 2021 - Aug 2021",
+    "description": "Looks through the files of a directory for user-specified string queries. Then creates a new folder with result files.",
+    "tags": ["Python"],
+    "github": "",
+    "demo": ""
+  },
+  {
+    "image": "media/projects/amod.png",
+    "title": "Applied ML Object Detection",
+    "date": "Mar 2021 - Aug 2021",
+    "description": "Object detection program for self-driving cars developed with YOLOv5 and OpenCV",
+    "tags": ["Python", "YOLOv5", "OpenCV"],
+    "github": "",
+    "demo": ""
+  }
+]
+
+
+    async function loadProjects() {
+        try {
+            // const response = await fetch('projects.json');
+            // const projects = await response.json();
+            renderProjects(projects);
+            console.log("Yes");
+        } catch (error) {
+            console.error('Error loading projects:', error);
+            console.log(error);
+        }
+    }
+
+    function renderProjects(projects) {
+        const container = document.getElementById('projects-container');
+        
+        const projectsHTML = projects.map(project => `
+            <div class="education-card-small expandable-card">
+                <div class="image-card-small">
+                    <img src="${project.image}" style="margin-bottom: 10px; object-fit: fill; width: 100%; height: 100%;" alt="${project.title}">
+                </div>
+                <div class="education-info">
+                    <h3>${project.title}</h3>
+                    <p>${project.date}</p>
+                </div>
+                <div class="degree">
+                    <p style="margin-top: 10px; line-height: 20px;">${project.description}</p>
+                </div>
+                <div class="course-tags">
+                    ${project.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+                </div>
+                <div class="card-expanded">
+                    ${project.github ? `<a href="${project.github}" class="action-btn">GitHub</a>` : ''}
+                    ${project.demo ? `<a href="${project.demo}" class="action-btn">Live Demo</a>` : ''}
+                </div>
+            </div>
+        `).join('');
+        
+        container.innerHTML = projectsHTML;
+    }
+
+    document.addEventListener('DOMContentLoaded', loadProjects);
+
+</script>
