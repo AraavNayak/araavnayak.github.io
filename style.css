@@ -701,4 +701,62 @@ a:active {
 
 .education-card-small#project-card:hover {
     border: 1px solid white;
+
+    /* show link sign */
+
+
+}
+
+/* .education-card-small#project-card:hover::after {
+    /* content: "↗"; or use "↗" for arrow */
+    /* position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 5px 8px;
+    border-radius: 4px;
+    font-size: 20px;
+    pointer-events: none; */
+
+/* 
+#project-card:hover::after {
+  content: '↗';
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 5px 8px;
+  border-radius: 4px;
+  font-size: 20px;
+} */
+
+
+.github-link {
+  position: relative;
+  top: 10px;
+  right: 10px;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 5px 8px;
+  border-radius: 4px;
+  font-size: 20px;
+  text-decoration: none;
+  opacity: 0; /* Hidden by default */
+  pointer-events: none; /* Prevents interaction when hidden */
+  transition: opacity 0.3s ease;
+
+
+}
+
+/* Show the link on hover over the card */
+.education-card-small:hover .github-link {
+  opacity: 1; /* Fade in */
+  pointer-events: auto; /* Enable interaction */
+}
+
+/* Icon for the link */
+.github-link::after {
+  content: "↗"; /* The arrow icon */
 }

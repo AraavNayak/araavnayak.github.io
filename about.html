@@ -76,7 +76,14 @@
                             <span class="tag">EPS 80: Environmental Earth Sciences</span>
                         </div>
                         
-                    
+                        <div class="hidden-tags">
+                            <span class="tag">IEOR 198: Introduction to Quantitative Finance</span>
+                        </div>
+
+                        <button class="expand-btn" onclick="toggleCoursesBig(this)">
+                            <span class="btn-text">+1 more</span>
+                            <span class="btn-text-collapse" style="display: none;">Show less</span>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -153,7 +160,7 @@
                         <div class="school-icon">🎓</div>
                         <div class="education-info">
                             <h3>West Valley College</h3>
-                            <div class="prior-degree">Dual Enrollment</div>
+                            <div class="prior-degree">Concurrent Enrollment</div>
 
                             <p>Aug 2025 - Dec 2025</p>
                         </div>
@@ -212,7 +219,7 @@
                     </a>
                     <svg width="20" height="20" viewBox="0 0 20 20">
                         <path d="M2 4a2 2 0 012-2h3.5a1 1 0 01.8.4l1.4 1.8a1 1 0 00.8.4H16a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V4z"/>
-                        <path d="M7 9l-1.5 1L7 11M13 9l1.5 1L13 11" stroke="currentcolor" stroke-width="1.2" fill="none"/>
+                        <!-- <path d="M7 9l-1.5 1L7 11M13 9l1.5 1L13 11" stroke="currentcolor" stroke-width="1.2" fill="none"/> -->
                     </svg>
                     
                     <span class="nav-label" style="z-index: 0; pointer-events: none;">Projects</span>
@@ -255,6 +262,27 @@
 
     function toggleCourses(button) {
         const card = button.closest('.education-card-small');
+        const hiddenTags = card.querySelector('.hidden-tags');
+        const btnText = button.querySelector('.btn-text');
+        const btnTextCollapse = button.querySelector('.btn-text-collapse');
+        
+        if (hiddenTags.classList.contains('expanded')) {
+            // Collapse
+            hiddenTags.classList.remove('expanded');
+            card.classList.remove('expanded');
+            btnText.style.display = 'inline';
+            btnTextCollapse.style.display = 'none';
+        } else {
+            // Expand
+            hiddenTags.classList.add('expanded');
+            card.classList.add('expanded');
+            btnText.style.display = 'none';
+            btnTextCollapse.style.display = 'inline';
+        }
+    }
+
+    function toggleCoursesBig(button) {
+        const card = button.closest('.education-card');
         const hiddenTags = card.querySelector('.hidden-tags');
         const btnText = button.querySelector('.btn-text');
         const btnTextCollapse = button.querySelector('.btn-text-collapse');
