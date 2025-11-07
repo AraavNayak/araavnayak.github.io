@@ -14,6 +14,23 @@ body {
     padding-bottom: 4rem;
 }
 
+/* Page titles */
+.page-title {
+    margin-top: 60px;
+    margin-bottom: 20px;
+    text-align: center;
+    font-size: clamp(1.75rem, 4vw, 2.5rem);
+    letter-spacing: 0.3px;
+    font-weight: 700;
+}
+
+.page-subtitle {
+    text-align: center;
+    color: #94a3b8;
+    margin-bottom: 24px;
+    font-size: clamp(0.95rem, 2.2vw, 1.05rem);
+}
+
 .stars {
     position: fixed;
     top: 0;
@@ -171,7 +188,7 @@ body {
 }
 
 .education-section {
-    margin-top: 3rem;
+    margin-top: 2rem;
     margin-bottom: 2rem;
 }
 
@@ -189,12 +206,46 @@ body {
 }
 
 .education-card {
-    background: rgba(15, 23, 42, 0.4);
-    border: 1px solid rgba(59, 130, 246, 0.2);
-    border-radius: 12px;
+    /* background: rgba(15, 23, 42, 0.45); */
+    background: rgba(25, 36, 61, 0.45);
+    border: 1px solid rgba(61, 70, 86, 0.15);
+    border-radius: 14px;
     padding: 2rem;
     backdrop-filter: blur(10px);
-    margin-bottom: 2.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.25s ease, box-shadow 0.3s ease, border-color 0.25s ease, background 0.25s ease;
+}
+
+/* Flashy minimalist hover for Experience cards */
+.education-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 14px 40px rgba(0, 0, 0, 0.45);
+    border-color: rgba(255, 255, 255, 0.653);
+    /* background: rgba(17, 24, 39, 0.55); */
+    /* border-color: rgb(255, 255, 255); */
+}
+
+/* Animated sheen sweep */
+.education-card::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -150%;
+    width: 120%;
+    height: 100%;
+    background: linear-gradient(75deg, transparent 0%, rgba(255,255,255,0.06) 50%, transparent 100%);
+    transform: skewX(-12deg);
+    opacity: 0;
+    pointer-events: none;
+    /* transition: opacity 0.35s ease, left 0.8s ease; */
+}
+
+.education-card:hover::after {
+    opacity: 1;
+    left: 130%;
 }
 
 .education-header {
@@ -204,21 +255,79 @@ body {
     margin-bottom: 1rem;
 }
 
+/* Lift company icon on hover */
+.education-header img {
+    transition: transform 0.25s ease;
+}
+.education-card:hover .education-header img {
+    transform: translateY(-2px) scale(1.03);
+}
+
 .education-info h3 {
-    font-size: clamp(1.1rem, 3vw, 1.3rem);
+    font-size: clamp(1.05rem, 2.6vw, 1.25rem);
     color: #f8fafc;
-    margin-bottom: 0.25rem;
+    margin: 0;
+    transition: color 0.25s ease;
+    flex: 1; /* Allow h3 to take available space */
 }
 
 .education-info p {
     color: #94a3b8;
     font-size: clamp(0.8rem, 2vw, 0.9rem);
+    margin: 0;
+}
+
+.education-info .header-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 2rem;  /*space between title and date   */
+    margin-bottom: 0.25rem;
+}
+
+/* Title tint on hover */
+.education-card:hover .education-info h3 {
+    color: #c7d2fe;
 }
 
 .degree {
     color: #c5d1e4;
-    font-size: clamp(0.8rem, 2vw, 0.9rem);
-    margin-bottom: 3px;
+    font-size: clamp(0.9rem, 2vw, 1rem);
+    /* margin-bottom: 8px; */
+    line-height: 1.9;
+}
+
+/* Experience list bullets */
+.degree ul {
+    padding-left: 10%;
+    margin-top: 0.35rem;
+    margin-bottom: 0.35rem;
+}
+
+.degree li {
+    margin: 0.65rem 0;
+    line-height: 1.9;
+}
+
+/* Minimalist colored markers for bullets */
+.degree li::marker {
+    color: #93c5fd;
+}
+
+.education-card:hover .tag {
+    background: rgba(59, 130, 246, 0.18);
+    border-color: rgba(59, 130, 246, 0.36);
+    /* color: #dbeafe; */
+}
+
+/* Respect users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    .education-card,
+    .education-card::after,
+    .education-header img,
+    .education-info h3 {
+        transition: none !important;
+    }
 }
 
 .bottom-nav {
@@ -331,12 +440,12 @@ body {
 }
 
 .education-card-small {
-    background: rgba(15, 23, 42, 0.4);
-    border: 1px solid rgba(59, 130, 246, 0.2);
-    border-radius: 12px;
-    padding: 1.5rem;
+    background: rgba(15, 23, 42, 0.45);
+    border: 1px solid rgba(148, 163, 184, 0.15);
+    border-radius: 14px;
+    padding: 1.25rem 1.25rem 1rem 1.25rem;
     backdrop-filter: blur(10px);
-    transition: all 0.4s ease;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
 }
 
 .education-card-small .education-header {
@@ -354,12 +463,15 @@ body {
 
 
 .image-card-small {
+    /* width: 100%;
+    aspect-ratio: 16/9;
+    overflow: hidden;
+    margin-bottom: 10px;
+    border-radius: 10px; */
     width: 100%;
-    height: 250px; /* or whatever height you want */
+    height: 270px; /* or whatever height you want */
     overflow: hidden; /* prevents image from overflowing */
     margin-bottom: 10px;
-    
-    
 }
 
 .image-card-small img {
@@ -436,16 +548,17 @@ body {
 }
 
 .tag {
-    background: rgba(59, 130, 246, 0.15);
-    border: 1px solid rgba(59, 130, 246, 0.3);
+    background: rgba(59, 130, 246, 0.14);
+    border: 1px solid rgba(59, 130, 246, 0.28);
+    /* color: #bfdbfe; */
     color: #93c5fd;
-    padding: 0.4rem 0.8rem;
-    border-radius: 6px;
-    font-size: clamp(0.75rem, 2vw, 0.85rem);
-    font-weight: 500;
-    transition: all 0.2s ease;
+    padding: 0.35rem 0.7rem;
+    border-radius: 10px;
+    font-size: clamp(0.7rem, 1.8vw, 0.8rem);
+    font-weight: 600;
+    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
     position: relative;
-    cursor: pointer;
+    cursor: default;
 }
 
 .expand-btn {
@@ -466,9 +579,10 @@ body {
     transform: translateY(-1px);
 }
 
-.education-card-small.expanded {
-    transform: scale(1.02);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+.education-card-small:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+    border-color: rgba(255, 255, 255, 0.18);
 }
 
 a:link,
@@ -700,11 +814,7 @@ a:active {
 
 
 .education-card-small#project-card:hover {
-    border: 1px solid white;
-
-    /* show link sign */
-
-
+    border: 1px solid rgba(255,255,255,0.35);
 }
 
 /* .education-card-small#project-card:hover::after {
@@ -734,20 +844,18 @@ a:active {
 
 
 .github-link {
-  position: relative;
+  position: absolute;
   top: 10px;
   right: 10px;
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(0, 0, 0, 0.7);
   color: white;
-  padding: 5px 8px;
-  border-radius: 4px;
-  font-size: 20px;
+  padding: 6px 9px;
+  border-radius: 6px;
+  font-size: 18px;
   text-decoration: none;
-  opacity: 0; /* Hidden by default */
-  pointer-events: none; /* Prevents interaction when hidden */
-  transition: opacity 0.3s ease;
-
-
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease, background 0.2s ease;
 }
 
 /* Show the link on hover over the card */
@@ -759,4 +867,60 @@ a:active {
 /* Icon for the link */
 .github-link::after {
   content: "↗"; /* The arrow icon */
+}
+
+/* Utility for small muted text under headings */
+.muted {
+    color: #94a3b8;
+}
+
+/* Align project card header block */
+.card-header {
+    display: flex;
+    /* align-items: center; */
+    justify-content: space-between;
+}
+
+/* Project placeholder for lazy loading */
+.project-placeholder {
+    min-height: 400px; /* Approximate height of a project card */
+    background: transparent;
+}
+
+/* Projects: image-first card with hover-to-reveal content */
+.project-card {
+    position: relative;
+    overflow: hidden;
+    padding: 1.25rem 1.25rem 1rem 1.25rem; /* keep original card padding */
+}
+
+.project-card .image-card-small {
+    border-radius: 10px;
+    margin: 0 0 10px 0;
+    width: 100%;
+    max-height: 230px; /* original visual height */
+    transition: max-height 0.3s ease;
+}
+
+
+
+/* Title below image (no overlay) */
+
+/* Hover-to-reveal description below image */
+.project-desc {
+    max-height: 0;
+    opacity: 1;
+    max-height: 240px;
+    /* overflow: hidden; */
+    transition: max-height 0.3s ease, opacity 0.25s ease;
+}
+
+/* .project-card:hover .project-desc {
+    max-height: 240px;
+    opacity: 1;
+} */
+
+.project-card .github-link {
+    top: 12px;
+    right: 12px;
 }

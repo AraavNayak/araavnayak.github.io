@@ -205,6 +205,9 @@
 ]
 
 
+
+
+
     async function loadProjects() {
         try {
             // const response = await fetch('projects.json');
@@ -217,38 +220,65 @@
         }
     }
 
+
+
     function renderProjects(projects) {
         const container = document.getElementById('projects-container');
         
-        const projectsHTML = projects.map(project => `
-            <div class="education-card-small expandable-card" id="project-card">
-                <div class="image-card-small">
-                    <img src="${project.image}" style="margin-bottom: 10px; object-fit: fill; width: 100%; height: 100%;" alt="${project.title}">
-                </div>
-                <div class="education-info">
-                    <h3>${project.title}</h3>
-                    <p>${project.date}</p>
-                </div>
-                <div class="degree">
-                    <p style="margin-top: 10px; line-height: 20px;">${project.description}</p>
-                </div>
-                <div class="course-tags">
-                    ${project.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
-                </div>
+        // Create placeholder elements for all projects
+        projects.forEach((project, index) => {
+            const placeholder = document.createElement('div');
+            placeholder.className = 'project-placeholder';
+            placeholder.dataset.index = index;
+            placeholder.dataset.loaded = 'false';
+            container.appendChild(placeholder);
+        });
 
+        // Set up Intersection Observer for lazy loading
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting && entry.target.dataset.loaded === 'false') {
+                    const index = parseInt(entry.target.dataset.index);
+                    const project = projects[index];
+                    
+                    // Replace placeholder with actual content
+                    const projectHTML = `
+                        <div class="education-card-small project-card" id="project-card">
+                            <div class="image-card-small">
+                                <img src="${project.image}" alt="${project.title}">
+                            </div>
 
-                <div id="project-card">
-                    <a href="${project.github}" class="github-link" target="_blank" style="position: absolute; top: 10px; right: 10px; background: rgba(0, 0, 0, 0.8); color: white; padding: 5px 8px; border-radius: 4px; font-size: 20px;">
-                        
-                    </a>
-                </div>
-                
+                            <div class="education-info">
+                                <div class="card-header">
+                                    <h3>${project.title}</h3>
+                                    
+                                </div>
+                                <p class="muted">${project.date}</p>
+                            </div>
 
+                            <div class="project-desc degree" style="margin-top: 10px; line-height: 20px; font-size: 15px;">
+                                <p>${project.description}</p>
+                            </div>
+                            <div class="course-tags">
+                                ${project.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+                            </div>
 
-            </div>
-        `).join('');
-        
-        container.innerHTML = projectsHTML;
+                            ${project.github ? `<a href="${project.github}" class="github-link" target="_blank" rel="noopener noreferrer" aria-label="Open project link"></a>` : ''}
+                        </div>
+                    `;
+                    
+                    entry.target.outerHTML = projectHTML;
+                }
+            });
+        }, {
+            root: null,
+            rootMargin: '50px',
+            threshold: 0
+        });
+
+        // Observe all placeholders
+        const placeholders = container.querySelectorAll('.project-placeholder');
+        placeholders.forEach(placeholder => observer.observe(placeholder));
     }
 
     document.addEventListener('DOMContentLoaded', loadProjects);
