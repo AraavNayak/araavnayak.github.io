@@ -6,7 +6,7 @@
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background: linear-gradient(135deg, #0a1428 0%, #1a2332 50%, #2a3441 100%);
+    background: linear-gradient(135deg, #050b18 0%, #0f1826 50%, #1a222e 100%);
     min-height: 100vh;
     color: #e2e8f0;
     overflow-x: hidden;
@@ -301,19 +301,44 @@ body {
 
 /* Experience list bullets */
 .degree ul {
-    padding-left: 10%;
+    padding-left: 0.5%;
     margin-top: 0.35rem;
     margin-bottom: 0.35rem;
 }
 
 .degree li {
     margin: 0.65rem 0;
+    margin-left: 7%;
     line-height: 1.9;
 }
 
 /* Minimalist colored markers for bullets */
 .degree li::marker {
     color: #93c5fd;
+}
+
+/* Activities & Societies line under the degree */
+.activities {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    margin-top: 0.75rem;
+    padding-top: 0.85rem;
+    border-top: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.activities-label {
+    font-size: clamp(0.65rem, 1.6vw, 0.72rem);
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #7c8aa5;
+}
+
+.activities-list {
+    font-size: clamp(0.85rem, 2vw, 0.95rem);
+    line-height: 1.6;
+    color: #c5d1e4;
 }
 
 .education-card:hover .tag {
@@ -337,6 +362,7 @@ body {
     bottom: 20px;
     left: 50%;
     transform: translateX(-50%);
+    z-index: 1000;
     display: flex;
     gap: 15px;
     background: rgba(0, 0, 0, 0.8);
@@ -403,6 +429,21 @@ body {
 .nav-btn:hover svg {
     transform: scale(1.1);
     margin-bottom: 5px;
+}
+
+/* Full-tile click target for each nav item */
+.nav-link {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    text-decoration: none;
+    z-index: 1;
+}
+
+.nav-link-hidden {
+    visibility: hidden;
 }
 
 .nav-label {
@@ -579,6 +620,14 @@ body {
     background: rgba(59, 130, 246, 0.1);
     border-color: rgba(59, 130, 246, 0.6);
     transform: translateY(-1px);
+}
+
+.hidden-volunteering {
+    display: none;
+}
+
+.hidden-volunteering.expanded {
+    display: block;
 }
 
 .education-card-small:hover {
@@ -913,6 +962,9 @@ a:active {
     max-height: 0;
     opacity: 1;
     max-height: 240px;
+    margin-top: 10px;
+    line-height: 20px;
+    font-size: 15px;
     /* overflow: hidden; */
     transition: max-height 0.3s ease, opacity 0.25s ease;
 }

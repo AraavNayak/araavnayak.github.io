@@ -1,4 +1,4 @@
-[
+window.PROJECTS = [
   {
     "image": "media/projects/wma.jpg",
     "title": "Wealth Management Agents",
@@ -227,3 +227,4 @@
     "demo": ""
   }
 ]
+;
