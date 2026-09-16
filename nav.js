@@ -23,6 +23,11 @@ const NAV_ITEMS = [
         svg: '<svg width="20" height="20" viewBox="0 0 20 20"><path d="M2 4a2 2 0 012-2h3.5a1 1 0 01.8.4l1.4 1.8a1 1 0 00.8.4H16a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V4z"/><path d="M7 9l-1.5 1L7 11M13 9l1.5 1L13 11" stroke="currentcolor" stroke-width="1.2" fill="none"/></svg>',
     },
     {
+        page: 'campus.html',
+        label: 'Campus',
+        svg: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/></svg>',
+    },
+    {
         page: 'contact.html',
         label: 'Contact',
         svg: '<svg width="20" height="20" viewBox="0 0 20 20"><path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/><path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/></svg>',

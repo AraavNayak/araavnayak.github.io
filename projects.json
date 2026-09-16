@@ -38,7 +38,7 @@
     "image": "media/projects/vt.jpg",
     "title": "Vision Transformer Implementation with TensorFlow",
     "date": "Oct 2025",
-    "description": "Implemented Vision Transformer network architecture based on \"An image is worth 16x15 words\" 2020 paper with multi-head self-attention (MSA) and Feed-forward network (MLP).",
+    "description": "Implemented Vision Transformer network architecture based on \"An image is worth 16x16 words\" 2020 paper with multi-head self-attention (MSA) and Feed-forward network (MLP).",
     "tags": [
       "Python",
       "PyTorch",
