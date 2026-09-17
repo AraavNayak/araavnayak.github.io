@@ -7,7 +7,7 @@ const NAV_ITEMS = [
         label: 'Home',
         svg: '<svg width="20" height="20" viewBox="0 0 20 20"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/></svg>',
     },
-    {
+{
         page: 'about.html',
         label: 'About',
         svg: '<svg width="20" height="20" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/></svg>',
@@ -21,11 +21,6 @@ const NAV_ITEMS = [
         page: 'projects.html',
         label: 'Projects',
         svg: '<svg width="20" height="20" viewBox="0 0 20 20"><path d="M2 4a2 2 0 012-2h3.5a1 1 0 01.8.4l1.4 1.8a1 1 0 00.8.4H16a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V4z"/><path d="M7 9l-1.5 1L7 11M13 9l1.5 1L13 11" stroke="currentcolor" stroke-width="1.2" fill="none"/></svg>',
-    },
-    {
-        page: 'campus.html',
-        label: 'Campus',
-        svg: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/></svg>',
     },
     {
         page: 'contact.html',
