@@ -14,22 +14,59 @@
     <body>
         <main id="home-page">
 
+            <div class="stars" id="stars-bg"></div>
 
-            <div class="main-container">
-                
-                
-                <div class="profile-section">
-                    <img src="media/selfie.webp" alt="Araav Nayak" class="profile-image" loading="lazy" width="400" height="400">
-                    <div class="profile-text">
-                        <h1 class="name-title">Araav Nayak</h1>
-                        <h2 class="typewriter subtitle" style="text-align: center;">Machine Learning Enthusiast</h2>
-                        <p class="description" style="text-align: center;">CS & DS @ UC Berkeley</p>
+            <div class="hero-container">
+
+                <div class="hero-top">
+                    <img src="media/selfie.webp" alt="Araav Nayak" class="hero-avatar" loading="lazy" width="112" height="112">
+                    <span class="hero-status"><span class="status-dot"></span>Open to SWE / ML internships</span>
+                </div>
+
+                <h1 class="hero-headline">Hi, I'm Araav — I build <span class="hero-highlight">machine learning systems</span> that ship.</h1>
+
+                <p class="hero-subline">Computer Science &amp; Data Science @ UC Berkeley. Currently working on LLM benchmarking and RL post-training at Shipd. Previously optimized EC2 GPU capacity at AWS for frontier AI labs.</p>
+
+                <div class="hero-actions">
+                    <a href="projects.html" class="hero-btn hero-btn-primary">View my work</a>
+                    <a href="mailto:nayakaraav@gmail.com" class="hero-btn hero-btn-secondary">Say hello</a>
+                </div>
+
+                <div class="hero-glance">
+                    <div class="glance-item">
+                        <span class="glance-label">Based in</span>
+                        <span class="glance-value">Berkeley, CA</span>
+                    </div>
+                    <div class="glance-item">
+                        <span class="glance-label">Studying</span>
+                        <span class="glance-value">Data Science</span>
+                    </div>
+                    <div class="glance-item">
+                        <span class="glance-label">Graduating</span>
+                        <span class="glance-value">May 2028</span>
                     </div>
                 </div>
-            </div>
 
+            </div>
 
         </main>
         <script src="nav.js"></script>
+        <script>
+            // Lightweight twinkling star field for the hero background.
+            // Uses the existing .stars / .star classes already defined in style.css.
+            (function () {
+                var field = document.getElementById('stars-bg');
+                if (!field) return;
+                var count = 50;
+                for (var i = 0; i < count; i++) {
+                    var star = document.createElement('div');
+                    star.className = 'star';
+                    star.style.left = Math.random() * 100 + '%';
+                    star.style.top = Math.random() * 100 + '%';
+                    star.style.animationDelay = (Math.random() * 4) + 's';
+                    field.appendChild(star);
+                }
+            })();
+        </script>
     </body>
 </html>
