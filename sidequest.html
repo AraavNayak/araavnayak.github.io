@@ -1,0 +1,4318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NeonKart Racer</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600;700&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #000;
+      overflow: hidden;
+      font-family: 'Orbitron', monospace;
+    }
+
+    #game-canvas { display: block; }
+
+    /* ── HUD ── */
+    #hud {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    /* Speed */
+    #speedometer {
+      position: absolute;
+      bottom: 28px;
+      right: 32px;
+      text-align: center;
+    }
+    #speed-value {
+      font-size: 64px;
+      font-weight: 900;
+      color: #fff;
+      line-height: 1;
+      text-shadow: 0 0 20px #00f7ff, 0 0 40px #00f7ff88;
+    }
+    #speed-label {
+      font-size: 13px;
+      color: #00f7ff;
+      letter-spacing: 4px;
+      text-shadow: 0 0 10px #00f7ff;
+    }
+    #speed-bar-wrap {
+      width: 160px;
+      height: 6px;
+      background: rgba(255,255,255,0.15);
+      border-radius: 3px;
+      margin: 8px auto 0;
+      overflow: hidden;
+    }
+    #speed-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #00f7ff, #bf00ff);
+      border-radius: 3px;
+      transition: width 0.1s;
+      box-shadow: 0 0 8px #00f7ff;
+    }
+
+    /* Lap */
+    #lap-display {
+      position: absolute;
+      top: 20px;
+      right: 32px;
+      text-align: right;
+    }
+    #lap-label {
+      font-size: 11px;
+      color: #bf00ff;
+      letter-spacing: 3px;
+      text-shadow: 0 0 10px #bf00ff;
+    }
+    #lap-timer {
+      font-size: 38px;
+      font-weight: 700;
+      color: #fff;
+      text-shadow: 0 0 20px #bf00ff, 0 0 40px #bf00ff55;
+    }
+    #lap-count {
+      font-size: 14px;
+      color: #bf00ff;
+      letter-spacing: 2px;
+      margin-top: 2px;
+      text-shadow: 0 0 8px #bf00ff;
+    }
+    #best-lap {
+      font-size: 11px;
+      color: #ffd700;
+      letter-spacing: 2px;
+      margin-top: 4px;
+      text-shadow: 0 0 8px #ffd700;
+    }
+
+    /* Minimap */
+    #minimap-wrap {
+      position: absolute;
+      bottom: 28px;
+      left: 32px;
+      width: 160px;
+      height: 140px;
+    }
+    #minimap-label {
+      font-size: 9px;
+      color: #00f7ff88;
+      letter-spacing: 3px;
+      margin-bottom: 4px;
+    }
+    #minimap {
+      width: 160px;
+      height: 120px;
+      border-radius: 12px;
+      border: 1.5px solid #00f7ff44;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(6px);
+      overflow: hidden;
+    }
+
+    /* Gear / Boost indicators */
+    #indicators {
+      position: absolute;
+      bottom: 120px;
+      right: 32px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 8px;
+    }
+    .indicator-pill {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 11px;
+      letter-spacing: 2px;
+      font-weight: 700;
+      border: 1px solid transparent;
+      opacity: 0.4;
+      transition: opacity 0.2s, box-shadow 0.2s;
+    }
+    .indicator-pill.active {
+      opacity: 1;
+    }
+    #ind-drift {
+      background: rgba(255, 120, 0, 0.15);
+      border-color: #ff7800;
+      color: #ff7800;
+    }
+    #ind-drift.active { box-shadow: 0 0 12px #ff7800; }
+    #ind-boost {
+      background: rgba(0, 247, 255, 0.15);
+      border-color: #00f7ff;
+      color: #00f7ff;
+    }
+    #ind-boost.active { box-shadow: 0 0 12px #00f7ff; }
+    #ind-boost.ready { opacity: 0.85; }
+    #ind-jet { background: rgba(255,90,0,0.15); border-color: #ff7a1a; color: #ff9a3c; display: flex; align-items: center; gap: 8px; }
+    #ind-jet.active { box-shadow: 0 0 16px #ff7a1a; opacity: 1; }
+    #ind-jet.ready { opacity: 0.9; }
+    #ind-jet .fuel { width: 54px; height: 6px; border-radius: 3px; background: rgba(255,255,255,0.15); overflow: hidden; }
+    #ind-jet .fuel i { display: block; height: 100%; width: 100%; background: linear-gradient(90deg, #ff3300, #ffd000); }
+    /* speed streaks while flying */
+    #jet-streaks {
+      position: fixed; inset: 0; pointer-events: none; z-index: 5; opacity: 0; transition: opacity 0.4s;
+      background: repeating-conic-gradient(from 0deg at 50% 50%, rgba(255,255,255,0.0) 0deg 5deg, rgba(255,255,255,0.08) 5.5deg 6deg);
+      -webkit-mask-image: radial-gradient(circle at 50% 50%, transparent 32%, #000 75%);
+      mask-image: radial-gradient(circle at 50% 50%, transparent 32%, #000 75%);
+      animation: streak-spin 0.35s linear infinite;
+    }
+    @keyframes streak-spin { from { transform: scale(1); } to { transform: scale(1.06); } }
+    #ind-auto {
+      background: rgba(57, 255, 20, 0.15);
+      border-color: #39ff14;
+      color: #39ff14;
+    }
+    #ind-auto.active { box-shadow: 0 0 12px #39ff14; }
+    #ind-win {
+      background: rgba(255, 215, 0, 0.15);
+      border-color: #ffd700;
+      color: #ffd700;
+    }
+    #ind-win.active { box-shadow: 0 0 12px #ffd700; }
+
+    /* Item slot */
+    #item-box {
+      position: absolute;
+      top: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+    #item-slot {
+      position: relative;
+      width: 84px;
+      height: 84px;
+      border-radius: 18px;
+      border: 2px solid rgba(255, 215, 0, 0.35);
+      background: rgba(0, 0, 0, 0.55);
+      backdrop-filter: blur(6px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 46px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    #item-slot.has { border-color: #ffd700; box-shadow: 0 0 22px #ffd70088, inset 0 0 18px #ffd70033; }
+    #item-slot.rolling { border-color: #ff00aa; box-shadow: 0 0 22px #ff00aa88; }
+    #item-uses {
+      position: absolute;
+      right: -8px;
+      bottom: -8px;
+      font-size: 13px;
+      font-weight: 900;
+      color: #000;
+      background: #ffd700;
+      border-radius: 10px;
+      padding: 1px 7px;
+      display: none;
+    }
+    #item-key {
+      position: absolute;
+      left: -8px;
+      top: -8px;
+      font-size: 11px;
+      font-weight: 900;
+      color: #000;
+      background: #00f7ff;
+      border-radius: 8px;
+      padding: 1px 6px;
+      display: none;
+    }
+    #item-name {
+      font-size: 11px;
+      letter-spacing: 3px;
+      color: #ffd700;
+      text-shadow: 0 0 8px #ffd700;
+      min-height: 14px;
+    }
+
+    /* Pause */
+    #pause-overlay {
+      position: fixed;
+      inset: 0;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      z-index: 90;
+      background: rgba(5, 0, 15, 0.6);
+      backdrop-filter: blur(6px);
+    }
+    #pause-overlay.show { display: flex; }
+    #pause-overlay h2 {
+      font-size: 72px;
+      font-weight: 900;
+      letter-spacing: 10px;
+      background: linear-gradient(135deg, #00f7ff, #bf00ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      filter: drop-shadow(0 0 30px #bf00ff88);
+    }
+    #pause-overlay .hint {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 16px;
+      letter-spacing: 3px;
+      color: rgba(255,255,255,0.6);
+    }
+    .pause-btn {
+      cursor: pointer;
+      font-family: 'Orbitron', monospace;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      color: #000;
+      background: linear-gradient(135deg, #00f7ff, #bf00ff);
+      border: none;
+      padding: 12px 36px;
+      border-radius: 50px;
+      min-width: 220px;
+      box-shadow: 0 0 30px #bf00ff66;
+    }
+    .pause-btn.secondary {
+      background: transparent;
+      color: #00f7ff;
+      border: 1px solid #00f7ff88;
+      box-shadow: none;
+    }
+
+    /* Controls help */
+    #controls-help {
+      position: absolute;
+      top: 20px;
+      left: 32px;
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(0,247,255,0.2);
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 13px;
+      color: rgba(255,255,255,0.7);
+      line-height: 1.8;
+    }
+    #controls-help span { color: #00f7ff; font-weight: 600; }
+    #controls-toggle {
+      cursor: pointer;
+      pointer-events: all;
+      font-size: 10px;
+      color: #00f7ff88;
+      letter-spacing: 2px;
+      margin-top: 6px;
+      display: block;
+    }
+    #controls-body { overflow: hidden; transition: max-height 0.3s; max-height: 430px; }
+    #controls-body.hidden { max-height: 0; }
+
+    /* Start overlay */
+    #start-overlay {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(ellipse at center, #1a0030 0%, #000 70%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      transition: opacity 0.8s;
+    }
+    #start-overlay.fade-out { opacity: 0; pointer-events: none; }
+
+    .game-title {
+      font-size: 72px;
+      font-weight: 900;
+      background: linear-gradient(135deg, #00f7ff, #bf00ff, #ff0080);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-shadow: none;
+      filter: drop-shadow(0 0 30px #bf00ff88);
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+    .game-subtitle {
+      font-size: 14px;
+      color: #00f7ff88;
+      letter-spacing: 8px;
+      margin-bottom: 60px;
+    }
+    #start-btn {
+      pointer-events: all;
+      cursor: pointer;
+      font-family: 'Orbitron', monospace;
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 4px;
+      color: #000;
+      background: linear-gradient(135deg, #00f7ff, #bf00ff);
+      border: none;
+      padding: 16px 48px;
+      border-radius: 50px;
+      box-shadow: 0 0 40px #bf00ff88, 0 0 80px #00f7ff44;
+      transition: transform 0.2s, box-shadow 0.2s;
+      animation: pulse-btn 2s ease-in-out infinite;
+    }
+    #start-btn:hover {
+      transform: scale(1.06);
+      box-shadow: 0 0 60px #bf00ff, 0 0 100px #00f7ff66;
+    }
+    @keyframes pulse-btn {
+      0%,100% { box-shadow: 0 0 40px #bf00ff88, 0 0 80px #00f7ff44; }
+      50%      { box-shadow: 0 0 60px #bf00ffcc, 0 0 100px #00f7ff88; }
+    }
+    .start-keys {
+      margin-top: 28px;
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 13px;
+      color: rgba(255,255,255,0.4);
+      letter-spacing: 2px;
+    }
+
+    /* Countdown */
+    #countdown {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+      pointer-events: none;
+    }
+    #countdown-text {
+      font-size: 180px;
+      font-weight: 900;
+      background: linear-gradient(135deg, #00f7ff, #bf00ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      filter: drop-shadow(0 0 40px #bf00ff);
+      animation: countdown-pop 0.6s ease-out;
+    }
+    @keyframes countdown-pop {
+      0%   { transform: scale(2); opacity: 0; }
+      60%  { transform: scale(0.9); opacity: 1; }
+      100% { transform: scale(1); }
+    }
+
+    /* Finish */
+    #finish-overlay {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(ellipse at center, #1a0030 0%, #000 70%);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+    #finish-overlay h1 {
+      font-size: 80px;
+      font-weight: 900;
+      background: linear-gradient(135deg, #ffd700, #ff8c00);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      filter: drop-shadow(0 0 30px #ffd70088);
+      margin-bottom: 16px;
+    }
+    #finish-stats {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 22px;
+      color: rgba(255,255,255,0.8);
+      text-align: center;
+      line-height: 2;
+      margin-bottom: 40px;
+    }
+    #finish-stats b { color: #00f7ff; }
+    #restart-btn {
+      pointer-events: all;
+      cursor: pointer;
+      font-family: 'Orbitron', monospace;
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 4px;
+      color: #000;
+      background: linear-gradient(135deg, #ffd700, #ff8c00);
+      border: none;
+      padding: 14px 40px;
+      border-radius: 50px;
+      box-shadow: 0 0 40px #ffd70088;
+      transition: transform 0.2s;
+    }
+    #restart-btn:hover { transform: scale(1.06); }
+
+    /* Online multiplayer */
+    #mp-start-box { margin-top: 26px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+    #mp-start-box .row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+    .mp-input {
+      font-family: 'Orbitron', monospace; font-size: 14px; letter-spacing: 2px; color: #fff; text-align: center;
+      background: rgba(255,255,255,0.06); border: 1px solid rgba(0,247,255,0.4); border-radius: 30px; padding: 10px 18px; width: 230px; outline: none;
+    }
+    .mp-input:focus { border-color: #00f7ff; box-shadow: 0 0 14px #00f7ff55; }
+    .mp-btn {
+      cursor: pointer; font-family: 'Orbitron', monospace; font-size: 13px; font-weight: 700; letter-spacing: 3px;
+      padding: 11px 24px; border-radius: 30px; border: 1px solid #00f7ff99; background: rgba(0,247,255,0.08); color: #00f7ff;
+    }
+    .mp-btn:hover { background: rgba(0,247,255,0.18); }
+    .mp-btn.primary { background: linear-gradient(135deg, #00f7ff, #bf00ff); color: #000; border: none; box-shadow: 0 0 24px #bf00ff66; }
+    .mp-btn:disabled { opacity: 0.35; cursor: default; }
+    .mp-btn.on { background: #00f7ff; color: #000; }
+    #mp-lobby {
+      position: fixed; inset: 0; z-index: 140; display: none; align-items: center; justify-content: center; padding: 16px;
+      background: radial-gradient(ellipse at center, #1a0030 0%, #000 75%); font-family: 'Rajdhani', sans-serif; color: #fff;
+    }
+    #mp-card {
+      width: min(560px, 100%); background: rgba(10,0,25,0.7); border: 1px solid rgba(0,247,255,0.25); border-radius: 20px;
+      padding: 26px 26px 22px; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 0 60px #bf00ff33;
+      max-height: 100%; overflow-y: auto;
+    }
+    #mp-card h2 { font-family: 'Orbitron', monospace; letter-spacing: 6px; font-size: 22px; text-align: center; color: #00f7ff; text-shadow: 0 0 14px #00f7ff88; }
+    #mp-codebox { display: flex; align-items: center; justify-content: center; gap: 14px; }
+    #mp-code { font-family: 'Orbitron', monospace; font-size: 44px; font-weight: 900; letter-spacing: 10px; color: #fff; text-shadow: 0 0 20px #bf00ff; }
+    #mp-codebox .lbl { font-size: 11px; letter-spacing: 3px; color: rgba(255,255,255,0.5); }
+    #mp-players { list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 6px 16px; font-size: 18px; font-weight: 600; }
+    #mp-players li { display: flex; align-items: center; gap: 8px; }
+    #mp-players li i { font-style: normal; font-size: 11px; letter-spacing: 2px; color: #000; background: #00f7ff; border-radius: 8px; padding: 0 6px; }
+    #mp-players .dot { width: 11px; height: 11px; border-radius: 50%; }
+    #mp-players .slots { grid-column: 1 / -1; font-size: 12px; color: rgba(255,255,255,0.45); letter-spacing: 2px; }
+    #mp-settings { display: flex; flex-direction: column; gap: 8px; align-items: center; }
+    #mp-settings .row { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; align-items: center; }
+    #mp-settings .lbl { font-size: 12px; letter-spacing: 3px; color: rgba(255,255,255,0.55); width: 52px; text-align: right; }
+    #mp-settings .mp-btn { padding: 7px 14px; font-size: 11px; }
+    #mp-summary { text-align: center; font-size: 14px; color: rgba(255,255,255,0.7); }
+    #mp-status { text-align: center; font-size: 15px; color: #39ff14; min-height: 20px; }
+    #mp-status.bad { color: #ff5577; }
+    #mp-actions { display: flex; gap: 10px; justify-content: center; }
+    #mp-lobby:not(.is-host) #mp-settings .mp-btn { pointer-events: none; }
+    #mp-lobby:not(.is-host) #mp-start, #mp-lobby:not(.is-host) #mp-copy { display: none; }
+    #mp-lobby[data-view="join"] .room-only, #mp-lobby[data-view="room"] .join-only { display: none !important; }
+    #mp-alert { position: fixed; inset: 0; z-index: 150; display: none; flex-direction: column; gap: 16px; align-items: center; justify-content: center;
+      background: rgba(0,0,0,0.75); font-family: 'Orbitron', monospace; color: #fff; font-size: 20px; letter-spacing: 2px; text-align: center; padding: 16px; }
+    #finish-overlay.net-client #restart-btn { pointer-events: none; opacity: 0.6; }
+    #finish-overlay.net-client #newtrack-btn { display: none; }
+
+    /* Post-race highlights: the reel plays behind a see-through results panel */
+    body.replaying #hud, body.replaying #wrong-way, body.replaying #banner { display: none !important; }
+    #finish-overlay.replay {
+      background: linear-gradient(90deg, rgba(6,0,18,0) 30%, rgba(6,0,18,0.55) 55%, rgba(6,0,18,0.88) 80%);
+      align-items: flex-end;
+      padding-right: 5vw;
+      pointer-events: none;
+    }
+    #finish-overlay.replay > * { pointer-events: all; max-width: 520px; }
+    #finish-overlay.replay h1 { font-size: 46px; text-align: right; }
+    #finish-overlay.replay #finish-stats { text-align: right; font-size: 19px; margin-bottom: 24px; }
+    #finish-overlay.replay #results { margin-left: auto; margin-right: 0; font-size: 16px; }
+    #replay-ui { position: fixed; inset: 0; z-index: 90; pointer-events: none; display: none; }
+    body.replaying #replay-ui { display: block; }
+    .replay-bar { position: absolute; left: 0; right: 0; height: 9vh; background: #000; }
+    .replay-bar.top { top: 0; } .replay-bar.bottom { bottom: 0; }
+    #replay-tag {
+      position: absolute; top: calc(9vh + 14px); left: 24px; font-family: 'Orbitron', monospace;
+      font-size: 13px; font-weight: 700; letter-spacing: 4px; color: #fff; text-shadow: 0 1px 6px #000;
+    }
+    #replay-tag .dot { color: #ff2244; animation: rec-blink 1s steps(2) infinite; }
+    @keyframes rec-blink { 50% { opacity: 0; } }
+    #replay-count { display: block; margin-top: 4px; font-size: 10px; color: rgba(255,255,255,0.6); letter-spacing: 3px; }
+    #replay-caption {
+      position: absolute; bottom: calc(9vh + 18px); left: 24px; max-width: 55vw;
+      font-family: 'Orbitron', monospace; font-size: 20px; font-weight: 700; letter-spacing: 2px; color: #fff;
+      padding: 8px 16px; background: linear-gradient(90deg, rgba(191,0,255,0.85), rgba(0,247,255,0.0));
+      border-left: 4px solid #00f7ff;
+    }
+    #replay-slowmo {
+      position: absolute; top: calc(9vh + 14px); left: 50%; transform: translateX(-50%);
+      font-family: 'Orbitron', monospace; font-size: 12px; letter-spacing: 5px; color: #ffd700;
+      text-shadow: 0 0 10px #ffd700; opacity: 0; transition: opacity 0.2s;
+    }
+    #replay-cut { position: absolute; inset: 0; background: #000; opacity: 0; }
+    @media (max-width: 800px) {
+      #finish-overlay.replay { align-items: center; justify-content: flex-end; padding: 0 0 12vh; background: linear-gradient(0deg, rgba(6,0,18,0.9) 35%, rgba(6,0,18,0) 70%); }
+      #finish-overlay.replay h1 { font-size: 30px; text-align: center; }
+      #finish-overlay.replay #finish-stats { text-align: center; font-size: 15px; }
+      #replay-caption { font-size: 14px; bottom: auto; top: calc(9vh + 52px); max-width: 90vw; }
+    }
+
+    /* Wrong way */
+    #wrong-way {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 48px;
+      font-weight: 900;
+      color: #ff3333;
+      text-shadow: 0 0 30px #ff3333;
+      letter-spacing: 6px;
+      display: none;
+      z-index: 20;
+      animation: flash-wrong 0.6s ease-in-out infinite;
+    }
+    @keyframes flash-wrong { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    /* VS CPU */
+    #pos-display {
+      position: absolute;
+      top: 140px;
+      right: 32px;
+      text-align: right;
+      display: none;
+    }
+    #pos-value {
+      font-size: 44px;
+      font-weight: 900;
+      color: #fff;
+      line-height: 1;
+      text-shadow: 0 0 20px #ff00aa, 0 0 40px #ff00aa55;
+    }
+    #pos-value small { font-size: 18px; color: #ff00aa; }
+    #pos-gap {
+      font-size: 13px;
+      letter-spacing: 2px;
+      margin-top: 4px;
+      color: #ff00aa;
+      text-shadow: 0 0 8px #ff00aa;
+    }
+    #banner {
+      position: fixed;
+      top: 22%;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 40px;
+      font-weight: 900;
+      letter-spacing: 6px;
+      color: #ff00aa;
+      text-shadow: 0 0 30px #ff00aa;
+      display: none;
+      z-index: 20;
+      white-space: nowrap;
+    }
+    #mode-line {
+      margin-top: 18px;
+      font-size: 14px;
+      letter-spacing: 3px;
+      color: #ff00aa;
+      text-shadow: 0 0 10px #ff00aa;
+    }
+    #mode-line b { color: #fff; }
+    #track-line {
+      margin-top: 22px;
+      font-size: 13px;
+      letter-spacing: 4px;
+      color: #00f7ff;
+      text-shadow: 0 0 10px #00f7ff;
+    }
+    #track-line::after { content: ' · T = NEW TRACK'; color: rgba(255,255,255,0.4); }
+
+    /* Grand Prix standings */
+    #standings {
+      position: absolute;
+      top: 215px;
+      right: 32px;
+      display: none;
+      min-width: 150px;
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      background: rgba(0,0,0,0.45);
+      backdrop-filter: blur(6px);
+      border: 1px solid rgba(255,0,170,0.25);
+      border-radius: 10px;
+      padding: 6px 10px;
+      color: rgba(255,255,255,0.75);
+    }
+    #standings .row { display: flex; align-items: center; gap: 8px; line-height: 1.45; }
+    #standings .row .p { width: 14px; text-align: right; color: rgba(255,255,255,0.45); }
+    #standings .row .dot { width: 8px; height: 8px; border-radius: 50%; }
+    #standings .row.me { color: #fff; text-shadow: 0 0 8px #00f7ff; }
+    #standings .row .done { margin-left: auto; color: #ffd700; font-size: 11px; }
+    #results { margin: 6px auto 0; border-collapse: collapse; font-size: 18px; }
+    #results td { padding: 0 12px; text-align: left; }
+    #results tr.me td { color: #00f7ff; font-weight: 700; }
+  </style>
+</head>
+<body>
+<canvas id="game-canvas"></canvas>
+
+<!-- HUD -->
+<div id="hud">
+  <div id="item-box">
+    <div id="item-slot"><span id="item-icon"></span><span id="item-key">E</span><span id="item-uses"></span></div>
+    <div id="item-name"></div>
+  </div>
+
+  <div id="lap-display">
+    <div id="lap-label">LAP TIME</div>
+    <div id="lap-timer">00:00.000</div>
+    <div id="lap-count">LAP 1 / 3</div>
+    <div id="best-lap">BEST —</div>
+  </div>
+
+  <div id="pos-display">
+    <div id="pos-value">1<small>/2</small></div>
+    <div id="pos-gap">—</div>
+  </div>
+
+  <div id="standings"></div>
+
+  <div id="speedometer">
+    <div id="speed-value">0</div>
+    <div id="speed-label">KM/H</div>
+    <div id="speed-bar-wrap"><div id="speed-bar"></div></div>
+  </div>
+
+  <div id="minimap-wrap">
+    <div id="minimap-label">MAP</div>
+    <canvas id="minimap" width="160" height="120"></canvas>
+  </div>
+
+  <div id="indicators">
+    <div class="indicator-pill" id="ind-win">🏆 WIN MODE [X]</div>
+    <div class="indicator-pill" id="ind-auto">🤖 AUTOPILOT [P]</div>
+    <div class="indicator-pill" id="ind-jet">🔥 JETPACK [J] <span class="fuel"><i></i></span></div>
+    <div class="indicator-pill" id="ind-boost">⚡ BOOST [B]</div>
+    <div class="indicator-pill" id="ind-drift">🔥 DRIFT</div>
+  </div>
+
+  <div id="controls-help">
+    <div id="controls-body">
+      <div><span>W / ↑</span> Accelerate</div>
+      <div><span>S / ↓</span> Brake / Reverse</div>
+      <div><span>A / ← D / →</span> Steer</div>
+      <div><span>SHIFT</span> Drift Boost</div>
+      <div><span>B</span> Boost (3s, recharges in 10s)</div>
+      <div><span>J</span> Jetpack — fly at ~500 km/h</div>
+      <div><span>E</span> Use item (drive through ? cubes)</div>
+      <div><span>Space</span> Handbrake</div>
+      <div><span>P</span> Toggle Autopilot</div>
+      <div><span>X</span> Win Mode (pro autopilot)</div>
+      <div><span>V</span> First-person / chase view</div>
+      <div><span>Esc</span> Pause</div>
+      <div><span>R</span> Reset to track</div>
+      <div><span>T</span> New random track</div>
+      <div><span>M</span> VS CPU mode (3 laps)</div>
+      <div><span>N</span> Grand Prix: 6 CPUs, 7 laps</div>
+    </div>
+    <span id="controls-toggle">▲ HIDE CONTROLS</span>
+  </div>
+</div>
+
+<div id="wrong-way">⚠ WRONG WAY ⚠</div>
+<div id="banner"></div>
+<div id="jet-streaks"></div>
+
+<!-- Pause -->
+<div id="pause-overlay">
+  <h2>PAUSED</h2>
+  <button class="pause-btn" id="resume-btn">RESUME</button>
+  <button class="pause-btn secondary" id="pause-restart-btn">RESTART RACE</button>
+  <button class="pause-btn secondary" id="pause-newtrack-btn">NEW TRACK</button>
+  <div class="hint">ESC to resume</div>
+</div>
+
+<!-- Countdown -->
+<div id="countdown"><div id="countdown-text">3</div></div>
+
+<!-- Start screen -->
+<div id="start-overlay">
+  <div class="game-title">NEONKART</div>
+  <div class="game-subtitle">RACER</div>
+  <button id="start-btn">START RACE</button>
+  <div id="mp-start-box">
+    <input id="mp-name" class="mp-input" maxlength="12" placeholder="YOUR NAME" autocomplete="off">
+    <div class="row"><button class="mp-btn" id="mp-host">HOST ONLINE</button><button class="mp-btn" id="mp-join-open">JOIN ONLINE</button></div>
+  </div>
+  <div class="start-keys">WASD or ARROW KEYS to drive · P for AUTOPILOT</div>
+  <div id="track-line">TRACK</div>
+  <div id="mode-line">MODE: <b>SOLO</b> · press M for VS CPU</div>
+</div>
+
+<!-- Online lobby -->
+<div id="mp-lobby" data-view="room">
+  <div id="mp-card">
+    <h2>ONLINE RACE</h2>
+    <div class="join-only" style="display:flex;flex-direction:column;align-items:center;gap:10px">
+      <input id="mp-join-code" class="mp-input" maxlength="5" placeholder="ROOM CODE" autocomplete="off" style="text-transform:uppercase;font-size:22px;letter-spacing:8px">
+      <button class="mp-btn primary" id="mp-join-go">JOIN</button>
+    </div>
+    <div class="room-only" id="mp-codebox"><div><div class="lbl">ROOM CODE</div><div id="mp-code">·····</div></div><button class="mp-btn" id="mp-copy">COPY</button></div>
+    <ul class="room-only" id="mp-players"></ul>
+    <div class="room-only" id="mp-settings">
+      <div class="row"><span class="lbl">MODE</span><button class="mp-btn" data-mode="gp">GRAND PRIX + CPUs</button><button class="mp-btn" data-mode="race">PLAYERS ONLY</button></div>
+      <div class="row"><span class="lbl">LAPS</span><button class="mp-btn" data-laps="3">3</button><button class="mp-btn" data-laps="5">5</button><button class="mp-btn" data-laps="7">7</button><button class="mp-btn" data-laps="10">10</button></div>
+    </div>
+    <div class="room-only" id="mp-summary"></div>
+    <div id="mp-status"></div>
+    <div id="mp-actions"><button class="mp-btn" id="mp-leave">LEAVE</button><button class="mp-btn primary room-only" id="mp-start">START RACE</button></div>
+  </div>
+</div>
+<div id="mp-alert"><div id="mp-alert-text"></div><button class="mp-btn primary" id="mp-alert-btn">BACK TO MENU</button></div>
+
+<!-- Highlight reel chrome -->
+<div id="replay-ui">
+  <div id="replay-cut"></div>
+  <div class="replay-bar top"></div>
+  <div class="replay-bar bottom"></div>
+  <div id="replay-tag"><span class="dot">●</span> REPLAY<span id="replay-count"></span></div>
+  <div id="replay-slowmo">SLOW MOTION</div>
+  <div id="replay-caption"></div>
+</div>
+
+<!-- Finish screen -->
+<div id="finish-overlay">
+  <h1>🏆 FINISH!</h1>
+  <div id="finish-stats"></div>
+  <button id="restart-btn">RACE AGAIN</button>
+  <button id="newtrack-btn" class="pause-btn secondary" style="margin-top:14px">NEW TRACK</button>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script>
+// ══════════════════════════════════════════════════
+//  NeonKart Racer — Full 3D Racing Game
+// ══════════════════════════════════════════════════
+
+const canvas = document.getElementById('game-canvas');
+const minimapCanvas = document.getElementById('minimap');
+const minimapCtx = minimapCanvas.getContext('2d');
+
+// ── Renderer ──────────────────────────────────────
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.outputEncoding = THREE.sRGBEncoding;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.2;
+
+function resize() {
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', resize);
+
+// ── Scene & Camera ────────────────────────────────
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0a0010);
+scene.fog = new THREE.FogExp2(0x0a0010, 0.012);
+
+const camera = new THREE.PerspectiveCamera(68, window.innerWidth/window.innerHeight, 0.1, 600);
+resize();
+
+// ── Track Definition ──────────────────────────────
+// Every race gets a randomly generated circuit. The seed lives in the URL
+// (#…-s12345) so "Race Again" / restarts keep the same track, while
+// "New Track" (or T) rolls a fresh one.
+const CLASSIC_TRACK = [
+  [ 0,   0,   0  ],
+  [ 40,  0,  -20 ],
+  [ 90,  0,  -10 ],
+  [120,  0,   20 ],
+  [110,  0,   60 ],
+  [ 80,  0,   90 ],
+  [ 40,  0,  100 ],
+  [  0,  0,   90 ],
+  [-40,  0,   80 ],
+  [-70,  0,   50 ],
+  [-80,  0,   10 ],
+  [-60,  0,  -20 ],
+  [-30,  0,  -10 ],
+].map(p => new THREE.Vector3(p[0], p[1], p[2]));
+
+function mulberry32(a) {
+  return function () {
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+
+// Builds a random closed circuit and checks it's raceable:
+// sensible length, no corner tighter than ~12m radius, no two parts of the
+// track closer than 36m (so roads/barriers never overlap), and a straight
+// for the start grid. Returns control points starting at the start line.
+function generateTrackPoints(seed) {
+  const rng = mulberry32(seed);
+  const NCHK = 360;
+  for (let attempt = 0; attempt < 400; attempt++) {
+    const n = 10 + Math.floor(rng() * 6);                // 10–15 control points
+    const baseR = 70 + rng() * 30;
+    const sx = 1 + rng() * 0.8, sz = 0.9 + rng() * 0.3;  // stretch into an oval
+    const rot = rng() * Math.PI * 2;
+    let radii = [];
+    for (let i = 0; i < n; i++) radii.push(0.5 + rng() * 0.7);
+    // two to three deep dents make hairpins, kinks and S-bends
+    const dents = 2 + Math.floor(rng() * 2);
+    for (let d = 0; d < dents; d++) radii[Math.floor(rng() * n)] *= 0.3 + rng() * 0.3;
+    // light smoothing only (keeps the character)
+    radii = radii.map((r, i) => 0.15 * radii[(i - 1 + n) % n] + 0.7 * r + 0.15 * radii[(i + 1) % n]);
+
+    const pts = [];
+    for (let i = 0; i < n; i++) {
+      const a = (i + (rng() - 0.5) * 0.55) / n * Math.PI * 2;
+      const r = baseR * radii[i];
+      const x = Math.cos(a) * r * sx, z = Math.sin(a) * r * sz;
+      pts.push(new THREE.Vector3(
+        x * Math.cos(rot) - z * Math.sin(rot) + 20, 0,
+        x * Math.sin(rot) + z * Math.cos(rot) + 40));
+    }
+    if (rng() < 0.5) pts.reverse();                      // either direction
+
+    const curve = new THREE.CatmullRomCurve3(pts, true, 'catmullrom', 0.5);
+    const L = curve.getLength();
+    if (L < 450 || L > 780) continue;
+    const ds = L / NCHK;
+    const P = [], T = [];
+    for (let i = 0; i < NCHK; i++) { P.push(curve.getPointAt(i / NCHK)); T.push(curve.getTangentAt(i / NCHK)); }
+
+    // tightest corner
+    let ok = true;
+    const curv = new Float32Array(NCHK);
+    for (let i = 0; i < NCHK && ok; i++) {
+      const a = T[(i - 1 + NCHK) % NCHK], b = T[(i + 1) % NCHK];
+      curv[i] = Math.acos(Math.min(1, a.x * b.x + a.z * b.z)) / (2 * ds);
+      if (curv[i] > 1 / 12) ok = false;
+    }
+    if (!ok) continue;
+    // separation between non-neighbouring stretches
+    const minGapIdx = Math.ceil(90 / ds);
+    for (let i = 0; i < NCHK && ok; i++) {
+      for (let j = i + minGapIdx; j < NCHK; j++) {
+        if (NCHK - (j - i) < minGapIdx) break;
+        const dx = P[i].x - P[j].x, dz = P[i].z - P[j].z;
+        if (dx * dx + dz * dz < 36 * 36) { ok = false; break; }
+      }
+    }
+    if (!ok) continue;
+    // fits on the ground / in the shadow map
+    if (P.some(p => Math.abs(p.x - 20) > 175 || Math.abs(p.z - 40) > 175)) continue;
+
+    // Start line: the control point with the straightest run-up (grid sits behind it)
+    let bestK = -1, bestScore = Infinity;
+    for (let k = 0; k < n; k++) {
+      let ci = 0, bd = Infinity;
+      for (let i = 0; i < NCHK; i++) { const d = P[i].distanceToSquared(pts[k]); if (d < bd) { bd = d; ci = i; } }
+      let worst = 0;
+      for (let m = -Math.ceil(45 / ds); m <= Math.ceil(25 / ds); m++) worst = Math.max(worst, curv[(ci + m + NCHK) % NCHK]);
+      if (worst < bestScore) { bestScore = worst; bestK = k; }
+    }
+    if (bestScore > 1 / 45) continue;                    // need a fairly straight start
+    return { points: pts.slice(bestK).concat(pts.slice(0, bestK)), attempts: attempt + 1 };
+  }
+  return null;
+}
+
+const seedMatch = location.hash.match(/-s(\d+)/);
+const TRACK_SEED = seedMatch ? parseInt(seedMatch[1], 10) : 1 + Math.floor(Math.random() * 999999);
+const generatedTrack = generateTrackPoints(TRACK_SEED);
+const TRACK_POINTS = generatedTrack ? generatedTrack.points : CLASSIC_TRACK;
+
+const trackCurve = new THREE.CatmullRomCurve3(TRACK_POINTS, true, 'catmullrom', 0.5);
+const TRACK_WIDTH = 14;
+const TRACK_SEGMENTS = 200;
+
+// ── Build Track Mesh ──────────────────────────────
+function buildTrack() {
+  const points = trackCurve.getPoints(TRACK_SEGMENTS);
+
+  // Road surface
+  const roadGeo = new THREE.BufferGeometry();
+  const verts = [], uvs = [], indices = [];
+
+  for (let i = 0; i <= TRACK_SEGMENTS; i++) {
+    const t = i / TRACK_SEGMENTS;
+    const pt = trackCurve.getPoint(t);
+    const tan = trackCurve.getTangent(t);
+    const right = new THREE.Vector3(-tan.z, 0, tan.x).normalize();
+
+    const l = pt.clone().addScaledVector(right, -TRACK_WIDTH/2);
+    const r = pt.clone().addScaledVector(right,  TRACK_WIDTH/2);
+
+    verts.push(l.x, l.y, l.z, r.x, r.y, r.z);
+    uvs.push(0, t * 20, 1, t * 20);
+  }
+  for (let i = 0; i < TRACK_SEGMENTS; i++) {
+    const a = i*2, b = i*2+1, c = i*2+2, d = i*2+3;
+    indices.push(a,b,c, b,d,c);
+  }
+  roadGeo.setAttribute('position', new THREE.Float32BufferAttribute(verts, 3));
+  roadGeo.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+  roadGeo.setIndex(indices);
+  roadGeo.computeVertexNormals();
+
+  const roadMat = new THREE.MeshStandardMaterial({
+    color: 0x2a1a0a,
+    roughness: 0.9,
+    metalness: 0.1,
+  });
+  const road = new THREE.Mesh(roadGeo, roadMat);
+  road.receiveShadow = true;
+  scene.add(road);
+
+  // Kerbs (striped edge markers)
+  addKerbs(true);
+  addKerbs(false);
+
+  // Barriers
+  addBarriers();
+
+  // Ground plane
+  const groundGeo = new THREE.PlaneGeometry(600, 600);
+  const groundMat = new THREE.MeshStandardMaterial({ color: 0x111622, roughness: 1 });
+  const ground = new THREE.Mesh(groundGeo, groundMat);
+  ground.rotation.x = -Math.PI/2;
+  ground.position.y = -0.05;
+  ground.receiveShadow = true;
+  scene.add(ground);
+}
+
+function addKerbs(isLeft) {
+  const kerbGeo = new THREE.BufferGeometry();
+  const verts = [], uvs = [], indices = [];
+  const W2 = TRACK_WIDTH/2;
+  const KERB_W = 1.2;
+
+  for (let i = 0; i <= TRACK_SEGMENTS; i++) {
+    const t = i / TRACK_SEGMENTS;
+    const pt = trackCurve.getPoint(t);
+    const tan = trackCurve.getTangent(t);
+    const right = new THREE.Vector3(-tan.z, 0, tan.x).normalize();
+    const side = isLeft ? -1 : 1;
+
+    const inner = pt.clone().addScaledVector(right, side*(W2));
+    const outer = pt.clone().addScaledVector(right, side*(W2 + KERB_W));
+    inner.y += 0.05;
+    outer.y += 0.05;
+
+    verts.push(inner.x, inner.y, inner.z, outer.x, outer.y, outer.z);
+    uvs.push(0, t*8, 1, t*8);
+  }
+  for (let i = 0; i < TRACK_SEGMENTS; i++) {
+    const a=i*2, b=i*2+1, c=i*2+2, d=i*2+3;
+    isLeft ? indices.push(a,c,b,b,c,d) : indices.push(a,b,c,b,d,c);
+  }
+  kerbGeo.setAttribute('position', new THREE.Float32BufferAttribute(verts, 3));
+  kerbGeo.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+  kerbGeo.setIndex(indices);
+  kerbGeo.computeVertexNormals();
+
+  // Alternating red/white kerb texture via vertex colors
+  const colors = [];
+  for (let i = 0; i <= TRACK_SEGMENTS; i++) {
+    const stripe = Math.floor(i / 3) % 2 === 0;
+    const c = stripe ? [0.9, 0.1, 0.1] : [1, 1, 1];
+    colors.push(...c, ...c);
+  }
+  kerbGeo.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+
+  const kerbMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.7 });
+  const kerb = new THREE.Mesh(kerbGeo, kerbMat);
+  kerb.receiveShadow = true;
+  scene.add(kerb);
+}
+
+function addBarriers() {
+  const BARRIER_H = 1.2;
+  const W2 = TRACK_WIDTH/2 + 1.4;
+
+  [-1, 1].forEach(side => {
+    for (let i = 0; i < TRACK_SEGMENTS; i++) {
+      if (i % 3 !== 0) continue;
+      const t = i / TRACK_SEGMENTS;
+      const pt = trackCurve.getPoint(t);
+      const tan = trackCurve.getTangent(t);
+      const right = new THREE.Vector3(-tan.z, 0, tan.x).normalize();
+
+      const pos = pt.clone().addScaledVector(right, side * W2);
+      pos.y += BARRIER_H / 2;
+
+      const bGeo = new THREE.BoxGeometry(2.2, BARRIER_H, 0.4);
+      const stripe = Math.floor(i/3) % 2 === 0;
+      const bMat = new THREE.MeshStandardMaterial({
+        color: stripe ? 0xee2222 : 0xffffff,
+        roughness: 0.6,
+        emissive: stripe ? 0x330000 : 0x111111,
+      });
+      const b = new THREE.Mesh(bGeo, bMat);
+      b.position.copy(pos);
+
+      // Rotate barrier to face track
+      const angle = Math.atan2(tan.x, tan.z);
+      b.rotation.y = angle;
+
+      b.castShadow = true;
+      scene.add(b);
+    }
+  });
+}
+
+// ── Scenery ───────────────────────────────────────
+function buildScenery() {
+  // Neon arch gantries over track
+  const gantryPositions = [0.1, 0.3, 0.5, 0.7, 0.9];
+  gantryPositions.forEach((t, idx) => {
+    const pt = trackCurve.getPoint(t);
+    const tan = trackCurve.getTangent(t);
+    const right = new THREE.Vector3(-tan.z, 0, tan.x).normalize();
+    const angle = Math.atan2(tan.x, tan.z);
+
+    const colors = [0xff00aa, 0x00ffcc, 0xaa00ff, 0xff8800, 0x00aaff];
+    const col = colors[idx % colors.length];
+
+    // Pillars
+    [-1, 1].forEach(s => {
+      const pillarGeo = new THREE.CylinderGeometry(0.15, 0.2, 8, 8);
+      const pillarMat = new THREE.MeshStandardMaterial({ color: 0x888899, metalness: 0.8, roughness: 0.3 });
+      const pillar = new THREE.Mesh(pillarGeo, pillarMat);
+      const pPos = pt.clone().addScaledVector(right, s * (TRACK_WIDTH/2 + 2));
+      pPos.y += 4;
+      pillar.position.copy(pPos);
+      pillar.castShadow = true;
+      scene.add(pillar);
+    });
+
+    // Top neon bar
+    const barGeo = new THREE.BoxGeometry(TRACK_WIDTH + 4, 0.3, 0.3);
+    const barMat = new THREE.MeshStandardMaterial({
+      color: col, emissive: col, emissiveIntensity: 2, roughness: 0.3
+    });
+    const bar = new THREE.Mesh(barGeo, barMat);
+    bar.position.set(pt.x, 8, pt.z);
+    bar.rotation.y = angle;
+    scene.add(bar);
+
+    // Point light at gantry
+    const light = new THREE.PointLight(col, 3, 30);
+    light.position.set(pt.x, 9, pt.z);
+    scene.add(light);
+  });
+
+  // Decorative neon pylons around track perimeter
+  for (let i = 0; i < 30; i++) {
+    const t = i / 30;
+    const pt = trackCurve.getPoint(t);
+    const tan = trackCurve.getTangent(t);
+    const right = new THREE.Vector3(-tan.z, 0, tan.x).normalize();
+    const side = (i % 2 === 0) ? -1 : 1;
+    const pos = pt.clone().addScaledVector(right, side * (TRACK_WIDTH/2 + 5 + Math.random()*10));
+    pos.y = 0;
+    if (getTrackInfo(pos).dist < TRACK_WIDTH/2 + 4) continue;   // would sit on another stretch
+
+    const h = 4 + Math.random() * 4;
+    const pylonGeo = new THREE.BoxGeometry(0.4, h, 0.4);
+    const pylonColors = [0xff00aa, 0x00ffcc, 0xaa00ff, 0xff8800, 0x00aaff, 0xffff00];
+    const col = pylonColors[i % pylonColors.length];
+    const pylonMat = new THREE.MeshStandardMaterial({
+      color: col, emissive: col, emissiveIntensity: 1.5
+    });
+    const pylon = new THREE.Mesh(pylonGeo, pylonMat);
+    pylon.position.set(pos.x, h/2, pos.z);
+    scene.add(pylon);
+  }
+
+  // Stands / bleachers on one side
+  for (let i = 0; i < 8; i++) {
+    const t = 0.05 + i * 0.08;
+    const pt = trackCurve.getPoint(t);
+    const tan = trackCurve.getTangent(t);
+    const right = new THREE.Vector3(-tan.z, 0, tan.x).normalize();
+    const pos = pt.clone().addScaledVector(right, -(TRACK_WIDTH/2 + 8));
+    pos.y = 0;
+    if (getTrackInfo(pos).dist < TRACK_WIDTH/2 + 6) continue;
+
+    const standGeo = new THREE.BoxGeometry(6, 3, 4);
+    const standMat = new THREE.MeshStandardMaterial({ color: 0x223344, roughness: 0.9 });
+    const stand = new THREE.Mesh(standGeo, standMat);
+    stand.position.set(pos.x, 1.5, pos.z);
+    stand.rotation.y = Math.atan2(tan.x, tan.z);
+    stand.castShadow = true;
+    scene.add(stand);
+  }
+
+  // Start/finish line
+  const sfGeo = new THREE.PlaneGeometry(TRACK_WIDTH, 3);
+  const sfMat = new THREE.MeshStandardMaterial({
+    color: 0xffffff,
+    roughness: 0.5,
+    emissive: 0x444444,
+  });
+  const sf = new THREE.Mesh(sfGeo, sfMat);
+  const startPt = trackCurve.getPoint(0);
+  sf.rotation.x = -Math.PI/2;
+  sf.position.set(startPt.x, 0.02, startPt.z);
+  const startTan = trackCurve.getTangent(0);
+  sf.rotation.z = Math.atan2(startTan.x, startTan.z);
+  scene.add(sf);
+}
+
+// ── Lighting ──────────────────────────────────────
+function buildLighting() {
+  const ambient = new THREE.AmbientLight(0x221133, 0.8);
+  scene.add(ambient);
+
+  // Main directional
+  const dir = new THREE.DirectionalLight(0xffeedd, 0.6);
+  dir.position.set(80, 80, 40);
+  dir.castShadow = true;
+  dir.shadow.mapSize.set(2048, 2048);
+  dir.shadow.camera.near = 0.5;
+  dir.shadow.camera.far = 300;
+  dir.shadow.camera.left = -150;
+  dir.shadow.camera.right = 150;
+  dir.shadow.camera.top = 150;
+  dir.shadow.camera.bottom = -150;
+  scene.add(dir);
+
+  // Colored fill lights
+  const fill1 = new THREE.PointLight(0xff00aa, 2, 80);
+  fill1.position.set(-40, 20, 40);
+  scene.add(fill1);
+
+  const fill2 = new THREE.PointLight(0x00aaff, 2, 80);
+  fill2.position.set(80, 20, 60);
+  scene.add(fill2);
+}
+
+// ── Kart Model ────────────────────────────────────
+function buildKart(opts = {}) {
+  const bodyColor = opts.body ?? 0xee2222;
+  const bodyEmissive = opts.bodyEmissive ?? 0x220000;
+  const glowColor = opts.glow ?? 0x00f7ff;
+  const kartGroup = new THREE.Group();
+
+  // Body
+  const bodyGeo = new THREE.BoxGeometry(1.8, 0.55, 2.8);
+  const bodyMat = new THREE.MeshStandardMaterial({
+    color: bodyColor, metalness: 0.5, roughness: 0.4,
+    emissive: bodyEmissive, emissiveIntensity: 0.3
+  });
+  const body = new THREE.Mesh(bodyGeo, bodyMat);
+  body.position.y = 0.45;
+  body.castShadow = true;
+  kartGroup.add(body);
+
+  // Nose
+  const noseGeo = new THREE.BoxGeometry(1.2, 0.3, 0.8);
+  const nose = new THREE.Mesh(noseGeo, bodyMat);
+  nose.position.set(0, 0.28, 1.7);
+  nose.castShadow = true;
+  kartGroup.add(nose);
+
+  // Seat / cockpit
+  const seatGeo = new THREE.BoxGeometry(0.9, 0.4, 1.0);
+  const seatMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.9 });
+  const seat = new THREE.Mesh(seatGeo, seatMat);
+  seat.position.set(0, 0.9, -0.2);
+  kartGroup.add(seat);
+
+  // Helmet (driver)
+  const helmetGeo = new THREE.SphereGeometry(0.35, 16, 12);
+  const helmetMat = new THREE.MeshStandardMaterial({
+    color: 0xffffff, metalness: 0.4, roughness: 0.3,
+    emissive: 0x111111
+  });
+  const helmet = new THREE.Mesh(helmetGeo, helmetMat);
+  helmet.position.set(0, 1.35, -0.15);
+  helmet.castShadow = true;
+  kartGroup.add(helmet);
+
+  // Visor
+  const visorGeo = new THREE.SphereGeometry(0.36, 16, 12, 0, Math.PI * 2, 0, Math.PI * 0.5);
+  const visorMat = new THREE.MeshStandardMaterial({
+    color: 0xff3300, metalness: 0.9, roughness: 0.1, emissive: 0xff2200, emissiveIntensity: 0.5
+  });
+  const visor = new THREE.Mesh(visorGeo, visorMat);
+  visor.position.set(0, 1.35, -0.15);
+  visor.rotation.x = Math.PI * 0.1;
+  kartGroup.add(visor);
+
+  // Exhaust pipes
+  [-0.4, 0.4].forEach(x => {
+    const pipeGeo = new THREE.CylinderGeometry(0.08, 0.1, 0.8, 8);
+    const pipeMat = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.9, roughness: 0.2 });
+    const pipe = new THREE.Mesh(pipeGeo, pipeMat);
+    pipe.rotation.x = Math.PI/2;
+    pipe.position.set(x, 0.4, -1.7);
+    kartGroup.add(pipe);
+  });
+
+  // Wheels
+  const wheelGeo = new THREE.CylinderGeometry(0.4, 0.4, 0.35, 14);
+  const wheelMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.9 });
+  const rimMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.8, roughness: 0.2 });
+
+  const wheelPositions = [
+    [-1.0,  0.4,  1.1],
+    [ 1.0,  0.4,  1.1],
+    [-1.0,  0.4, -1.1],
+    [ 1.0,  0.4, -1.1],
+  ];
+
+  const wheels = [];
+  wheelPositions.forEach((pos, i) => {
+    const wg = new THREE.Group();
+    const w = new THREE.Mesh(wheelGeo, wheelMat);
+    w.rotation.z = Math.PI / 2;
+    w.castShadow = true;
+    wg.add(w);
+
+    const rimGeo = new THREE.CylinderGeometry(0.2, 0.2, 0.36, 6);
+    const rim = new THREE.Mesh(rimGeo, rimMat);
+    rim.rotation.z = Math.PI / 2;
+    wg.add(rim);
+
+    wg.position.set(...pos);
+    kartGroup.add(wg);
+    wheels.push(wg);
+  });
+
+  // Headlights glow
+  const hlMat = new THREE.MeshStandardMaterial({
+    color: 0xffffaa, emissive: 0xffffaa, emissiveIntensity: 3
+  });
+  [-0.4, 0.4].forEach(x => {
+    const hlGeo = new THREE.BoxGeometry(0.3, 0.15, 0.05);
+    const hl = new THREE.Mesh(hlGeo, hlMat);
+    hl.position.set(x, 0.5, 1.43);
+    kartGroup.add(hl);
+  });
+
+  // Rear neon underglow
+  const glowMat = new THREE.MeshStandardMaterial({
+    color: glowColor, emissive: glowColor, emissiveIntensity: 2
+  });
+  const glowGeo = new THREE.BoxGeometry(1.6, 0.05, 2.4);
+  const glow = new THREE.Mesh(glowGeo, glowMat);
+  glow.position.y = 0.12;
+  kartGroup.add(glow);
+
+  kartGroup.wheels = wheels;
+  return kartGroup;
+}
+
+// ── Particle Systems ──────────────────────────────
+class ParticleSystem {
+  constructor(count, color) {
+    this.count = count;
+    this.geo = new THREE.BufferGeometry();
+    this.positions = new Float32Array(count * 3);
+    this.velocities = [];
+    this.lifetimes = new Float32Array(count).fill(0);
+    this.maxLife = new Float32Array(count).fill(1);
+
+    for (let i = 0; i < count; i++) {
+      this.positions[i*3] = 0;
+      this.positions[i*3+1] = -1000;
+      this.positions[i*3+2] = 0;
+      this.velocities.push(new THREE.Vector3());
+    }
+
+    this.geo.setAttribute('position', new THREE.BufferAttribute(this.positions, 3));
+    this.mat = new THREE.PointsMaterial({
+      color, size: 0.15, transparent: true, opacity: 0.8,
+      depthWrite: false, blending: THREE.AdditiveBlending,
+      sizeAttenuation: true
+    });
+    this.mesh = new THREE.Points(this.geo, this.mat);
+    scene.add(this.mesh);
+    this.nextIdx = 0;
+  }
+
+  emit(pos, vel, life = 0.6) {
+    const i = this.nextIdx % this.count;
+    this.nextIdx++;
+    this.positions[i*3]   = pos.x;
+    this.positions[i*3+1] = pos.y;
+    this.positions[i*3+2] = pos.z;
+    this.velocities[i].copy(vel);
+    this.lifetimes[i] = life;
+    this.maxLife[i] = life;
+  }
+
+  update(dt) {
+    for (let i = 0; i < this.count; i++) {
+      if (this.lifetimes[i] > 0) {
+        this.lifetimes[i] -= dt;
+        this.positions[i*3]   += this.velocities[i].x * dt;
+        this.positions[i*3+1] += this.velocities[i].y * dt;
+        this.positions[i*3+2] += this.velocities[i].z * dt;
+        this.velocities[i].y -= 3 * dt; // gravity
+        const ratio = this.lifetimes[i] / this.maxLife[i];
+        if (this.lifetimes[i] <= 0) {
+          this.positions[i*3+1] = -1000; // hide
+        }
+      }
+    }
+    this.geo.attributes.position.needsUpdate = true;
+  }
+}
+
+// ── Game State ────────────────────────────────────
+const TOTAL_LAPS = 50;
+const MAX_SPEED = 55;  // m/s display units
+const MAX_KMH = 250;
+
+const keys = {};
+window.addEventListener('keydown', e => {
+  if (e.target && e.target.tagName === 'INPUT') return;      // typing a name / room code
+  keys[e.code] = true;
+  if (e.code.startsWith('Arrow') || e.code === 'Space') e.preventDefault();
+  // online: no pausing, and no mode/track switches (they'd reload the page)
+  if (NET.active && /^(Escape|KeyM|KeyN|KeyT)$/.test(e.code)) return;
+  // Toggle autopilot (P — A is already used for steering)
+  if (e.code === 'Escape' && !e.repeat) togglePause();
+  if (paused) return;   // ignore other toggles while paused
+  if (e.code === 'KeyP' && !e.repeat) { kart.autopilot = !kart.autopilot; if (kart.autopilot) kart.winMode = false; }
+  if (e.code === 'KeyX' && !e.repeat) { kart.winMode = !kart.winMode; if (kart.winMode) kart.autopilot = false; }
+  if (e.code === 'KeyV' && !e.repeat) { firstPerson = !firstPerson; showBanner(firstPerson ? 'COCKPIT VIEW' : 'CHASE VIEW', 0.8); }
+  if (e.code === 'KeyR' && !e.repeat && gameState === 'racing') resetToTrack();
+  if (e.code === 'KeyM' && !e.repeat) setMode(vsMode ? 'solo' : 'vs');
+  if (e.code === 'KeyN' && !e.repeat) setMode(gpMode ? 'solo' : 'gp');
+  if (e.code === 'KeyT' && !e.repeat) newTrack();
+  if (e.code === 'KeyB' && !e.repeat) fireBoost();
+  if (e.code === 'KeyJ' && !e.repeat) toggleJetpack();
+  if (e.code === 'KeyE' && !e.repeat && gameState === 'racing' && !kart.finished) useItem(racers()[0]);
+});
+window.addEventListener('keyup',   e => { keys[e.code] = false; });
+
+let gameState = 'menu'; // menu | countdown | racing | finished
+// Mode persists across restarts via the URL hash (#vs / #solo, "-go" = skip menu)
+let vsMode = location.hash.includes('vs');
+let gpMode = !vsMode && location.hash.includes('gp');
+let GP_LAPS = 7;            // online races set their own lap count
+const GP_CPUS = 6;
+function totalLaps() { return gpMode ? GP_LAPS : TOTAL_LAPS; }
+function modeHash() { return gpMode ? 'gp' : vsMode ? 'vs' : 'solo'; }
+function stateHash(go, newTrack) {
+  return modeHash() + (go ? '-go' : '') + (newTrack ? '' : '-s' + TRACK_SEED);
+}
+let kartGroup, smokeParticles, driftParticles;
+
+// Kart physics state
+const kart = {
+  pos: new THREE.Vector3(),
+  vel: new THREE.Vector3(),
+  dir: new THREE.Vector3(0,0,1),
+  speed: 0,
+  steer: 0,
+  yaw: 0,
+  isDrifting: false,
+  driftBoost: 0,
+  driftTime: 0,
+  driftSide: 0,
+  offTrack: false,
+  trackT: 0,    // closest t on track curve
+  trackDir: 1,  // 1 = correct, -1 = wrong way
+  lapCount: 0,
+  lastT: 0,
+  lapStartTime: 0,
+  lapTime: 0,
+  bestLap: Infinity,
+  totalTime: 0,
+  finished: false,
+  autopilot: false,
+  winMode: false,
+  boostCooldown: 0,   // seconds until the B boost is ready again
+  jet: false,         // jetpack firing?
+  fuel: 20,           // seconds of jetpack fuel
+  alt: 0,             // height above the track (m)
+  started: false, // becomes true once the kart first crosses the start line
+};
+
+const TRACK_LENGTH = trackCurve.getLength();
+
+// ── Autopilot ─────────────────────────────────────
+// Returns analog controls: { steer: -1..1, throttle: bool, brake: bool }
+function getAutopilotInput(trackT) {
+  const speed = Math.max(kart.speed, 0);
+
+  // Aim at a point on the centerline some distance ahead (further at speed)
+  const lookDist = 9 + speed * 0.35;
+  const aimT = (trackT + lookDist / TRACK_LENGTH) % 1;
+  const aim = trackCurve.getPointAt(aimT);
+  const desiredYaw = Math.atan2(aim.x - kart.pos.x, aim.z - kart.pos.z);
+
+  let diff = desiredYaw - kart.yaw;
+  while (diff >  Math.PI) diff -= Math.PI * 2;
+  while (diff < -Math.PI) diff += Math.PI * 2;
+
+  // Positive steer decreases yaw, so steer opposite to the yaw error
+  const steer = Math.max(-1, Math.min(1, -diff * 3.5));
+
+  // Slow down for upcoming bends: compare tangents now vs ~35m ahead
+  const tanNow   = trackCurve.getTangentAt(trackT);
+  const tanAhead = trackCurve.getTangentAt((trackT + 35 / TRACK_LENGTH) % 1);
+  const bend = Math.acos(Math.max(-1, Math.min(1, tanNow.dot(tanAhead))));
+  const targetSpeed = MAX_SPEED * Math.max(0.5, 1 - bend * 0.8) * (Math.abs(diff) > 0.6 ? 0.6 : 1);
+
+  return {
+    steer,
+    throttle: kart.speed < targetSpeed,
+    brake: kart.speed > targetSpeed + 4,
+  };
+}
+
+// ── Boost (B) ─────────────────────────────────────
+const BOOST_TIME = 3;       // seconds of boost
+const BOOST_COOLDOWN = 10;  // seconds before it can be used again
+function fireBoost() {
+  if (gameState !== 'racing' || kart.finished || kart.boostCooldown > 0) return false;
+  kart.driftBoost = Math.max(kart.driftBoost, BOOST_TIME); // same boost as a drift: +25% top speed
+  kart.speed = Math.max(kart.speed, Math.min(kart.speed + 8, MAX_SPEED)); // a little kick
+  kart.boostCooldown = BOOST_COOLDOWN;
+  showBanner('BOOST!', 0.8);
+  recEvent('boost');
+  return true;
+}
+
+// ── Jetpack (J) ───────────────────────────────────
+const JET_FUEL = 20;         // seconds of flight on a full tank
+const JET_RECHARGE = 0.4;    // fuel seconds regained per second (≈50 s to refill a 20 s tank)
+const JET_MIN_FUEL = 1;      // need at least this much to light it
+const JET_SPEED = 2.0;       // × normal top speed (≈ 500 km/h on the speedo)
+const JET_ALT = 3.2;         // cruising height (m)
+function toggleJetpack() {
+  if (gameState !== 'racing' || kart.finished) return;
+  if (kart.jet) { kart.jet = false; showBanner('JETPACK OFF', 0.7); return; }
+  if (kart.fuel < JET_MIN_FUEL) { showBanner('REFUELLING…', 0.8); return; }
+  kart.jet = true;
+  kart.isDrifting = false;
+  showBanner('🔥 JETPACK!', 1);
+  recEvent('jet');
+}
+// twin tanks, nozzles, flames and fold-out wings — strapped on behind the seat
+function addJetpack(g) {
+  const jp = new THREE.Group();
+  const metal = new THREE.MeshStandardMaterial({ color: 0xd9dee3, metalness: 0.45, roughness: 0.3, emissive: 0x222428 });
+  const dark = new THREE.MeshStandardMaterial({ color: 0x25272b, metalness: 0.6, roughness: 0.4 });
+  const flameMat = new THREE.MeshBasicMaterial({ color: 0xff9a2a, transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false });
+  const coreMat = new THREE.MeshBasicMaterial({ color: 0xbfe8ff, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false });
+  jp.flames = [];
+  for (const s of [-1, 1]) {
+    const tank = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.17, 0.75, 14), metal); tank.position.set(s * 0.24, 1.25, -0.62); tank.castShadow = true; jp.add(tank);
+    const cap = new THREE.Mesh(new THREE.SphereGeometry(0.17, 14, 8, 0, Math.PI * 2, 0, Math.PI / 2), metal); cap.position.set(s * 0.24, 1.625, -0.62); jp.add(cap);
+    const noz = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.16, 0.22, 12), dark); noz.position.set(s * 0.24, 0.78, -0.62); jp.add(noz);
+    const flame = new THREE.Mesh(new THREE.ConeGeometry(0.17, 1.3, 12, 1, true), flameMat); flame.rotation.x = Math.PI; flame.position.set(s * 0.24, 0.02, -0.62); jp.add(flame);
+    const core = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.7, 10, 1, true), coreMat); core.rotation.x = Math.PI; core.position.set(s * 0.24, 0.33, -0.62); jp.add(core);
+    jp.flames.push(flame, core);
+  }
+  const strap = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.12, 0.08), dark); strap.position.set(0, 1.3, -0.5); jp.add(strap);
+  const wingMat = new THREE.MeshStandardMaterial({ color: 0x00e5ff, emissive: 0x0090a0, emissiveIntensity: 0.7, metalness: 0.5, roughness: 0.3 });
+  jp.wings = new THREE.Mesh(new THREE.BoxGeometry(3.4, 0.06, 0.6), wingMat); jp.wings.position.set(0, 1.0, -0.55); jp.wings.castShadow = true; jp.add(jp.wings);
+  jp.amount = 0; jp.visible = false; jp.scale.setScalar(0.001);
+  g.add(jp); g.jetpack = jp;
+}
+function animateJetpack(g, on, dt) {
+  if (!g) return;
+  if (!g.jetpack) addJetpack(g);
+  const jp = g.jetpack;
+  jp.amount += ((on ? 1 : 0) - jp.amount) * Math.min(1, dt * 6);
+  jp.visible = jp.amount > 0.02;
+  jp.scale.setScalar(Math.max(0.001, jp.amount));
+  jp.wings.scale.x = Math.max(0.01, jp.amount * jp.amount);
+  for (const f of jp.flames) { f.scale.y = (on ? 0.8 + Math.random() * 0.6 : 0.01); f.scale.x = f.scale.z = 0.85 + Math.random() * 0.3; }
+}
+function jetFlames(pos, dir, alt) {
+  const right = new THREE.Vector3(-dir.z, 0, dir.x);
+  for (const s of [-1, 1]) {
+    const p = pos.clone().addScaledVector(dir, -0.7).addScaledVector(right, s * 0.24); p.y = alt + 0.5;
+    driftParticles.emit(p, new THREE.Vector3(-dir.x * 10 + (Math.random() - 0.5) * 2, -6 - Math.random() * 4, -dir.z * 10 + (Math.random() - 0.5) * 2), 0.35);
+    if (Math.random() < 0.4) smokeParticles.emit(p, new THREE.Vector3(-dir.x * 6, -2, -dir.z * 6), 0.9);
+  }
+}
+
+// ── Win Mode ──────────────────────────────────────
+// A pro driver: finds the fastest clean line and never lifts unless it must.
+const STEER_MAX = 0.045;
+const DRIFT_YAW_MIN = 0.5 * STEER_MAX * 60;  // drifting forces at least this yaw rate (rad/s)
+const DRIFT_YAW_MAX = 2.5 * STEER_MAX * 60;  // …and allows at most this
+const GRIP_YAW_MAX  = 1.0 * STEER_MAX * 60;  // normal max yaw rate without drifting
+
+// Predictive controller: every frame, try a set of steer / throttle / drift
+// choices, simulate each ~0.6s ahead with the kart's own physics, score them
+// (progress, staying on track, time spent drifting) and pick the best.
+const WM = {
+  horizon: 18, simDt: 1 / 30,
+  steers: [-1, -0.75, -0.5, -0.25, 0, 0.25, 0.5, 0.75, 1],
+  wProgress: 1.0,      // per metre of track progress
+  wLine: 0.002,        // pull toward the racing line
+  edge: 6.2,           // start penalising beyond this lateral offset
+  wEdge: 3.0,
+  hardEdge: 7.9,       // beyond this you're on the slow stuff
+  allowDrift: false,
+  wDrift: 0.22,        // per sim step spent drifting (boost farming)
+  wBoost: 0.9,         // per second of boost earned
+  shortDriftPenalty: 4,
+  startDriftCost: 0.6,
+  minDriftSpeed: 30,   // only drift at racing speed
+  minDrift: 0.55,      // hold every drift at least this long (boost needs > 0.5s)
+  bailCost: 40,        // …unless holding it looks this much worse
+};
+
+function nearestIdxWalk(x, z, idx) {
+  const d2 = (i) => { const p = S_PT[i]; const dx = x - p.x, dz = z - p.z; return dx*dx + dz*dz; };
+  let best = idx, bd = d2(idx);
+  for (let dirn of [1, -1]) {
+    let i = best;
+    for (let n = 0; n < 12; n++) {
+      const j = (i + dirn + NS) % NS, dj = d2(j);
+      if (dj < bd) { bd = dj; best = j; i = j; } else break;
+    }
+  }
+  return best;
+}
+
+function simulateWinOption(opt, idx0) {
+  let x = kart.pos.x, z = kart.pos.z, yaw = kart.yaw, speed = kart.speed, steer = kart.steer;
+  let drifting = kart.isDrifting, side = kart.driftSide, dTime = kart.driftTime, boost = kart.driftBoost;
+  let idx = idx0, cost = 0, progress = 0;
+  const dt = WM.simDt, fr = Math.pow(0.99, dt * 60), frOff = Math.pow(0.93, dt * 60);
+
+  if (opt.drift && !drifting) cost += WM.startDriftCost;
+  for (let k = 0; k < WM.horizon; k++) {
+    const pt = S_PT[idx], r = S_RIGHT[idx];
+    const lat = (x - pt.x) * r.x + (z - pt.z) * r.z;
+    const off = Math.abs(lat) > TRACK_WIDTH / 2 + 1;
+    // throttle / brake
+    if (opt.throttle) speed += (off ? 22 : 60) * dt;
+    else if (speed > 0.5) speed -= 40 * dt;
+    const maxFwd = boost > 0 ? MAX_SPEED * 1.25 : MAX_SPEED;
+    speed = Math.min(maxFwd, speed) * (off ? frOff : fr);
+    // steering lag
+    steer += (opt.steer * STEER_MAX - steer) * Math.min(1, 0.1 * 60 * dt);
+    // drift
+    if (opt.drift && !drifting && speed > 10) { drifting = true; side = opt.side; dTime = 0; }
+    if (!opt.drift && drifting) {
+      if (dTime > 0.5) { const b = Math.min(dTime * 0.6, 2.5); boost = b; cost -= WM.wBoost * b; }
+      else cost += WM.shortDriftPenalty;
+      drifting = false; dTime = 0;
+    }
+    if (drifting) { dTime += dt; cost -= WM.wDrift; }
+    if (boost > 0) { speed += 15 * dt; boost -= dt; }
+    // yaw + move
+    const sf = Math.min(Math.abs(speed) / 20, 1);
+    const total = steer + (drifting ? side * 1.5 * STEER_MAX : 0);
+    yaw -= total * sf * 60 * dt;
+    const dx = Math.sin(yaw), dz = Math.cos(yaw);
+    const slide = drifting ? side * 2 : 0;
+    x += dx * speed * dt + (-dz) * slide * dt;
+    z += dz * speed * dt + ( dx) * slide * dt;
+
+    const nIdx = nearestIdxWalk(x, z, idx);
+    let dIdx = nIdx - idx;
+    if (dIdx < -NS / 2) dIdx += NS;
+    if (dIdx >  NS / 2) dIdx -= NS;
+    progress += dIdx * DS;
+    idx = nIdx;
+
+    const p2 = S_PT[idx], r2 = S_RIGHT[idx];
+    const lat2 = (x - p2.x) * r2.x + (z - p2.z) * r2.z;
+    const target = RIVAL_LINE[idx] * 0.7;
+    cost += WM.wLine * (lat2 - target) * (lat2 - target);
+    const a = Math.abs(lat2);
+    if (a > WM.edge) cost += WM.wEdge * (a - WM.edge) * (a - WM.edge);
+    if (a > WM.hardEdge) cost += 60;
+    for (const m of mines) {
+      const mx = x - m.pos.x, mz = z - m.pos.z;
+      if (mx * mx + mz * mz < 2.4 * 2.4) cost += 45;
+    }
+  }
+  // A drift still running at the end of the window is worth the boost it has banked
+  if (drifting && dTime > 0.5) cost -= WM.wBoost * Math.min(dTime * 0.6, 2.5);
+  // end heading should roughly follow the track
+  const t = S_TAN[idx];
+  const headDot = Math.sin(yaw) * t.x + Math.cos(yaw) * t.z;
+  cost += (1 - headDot) * 25;
+  return cost - WM.wProgress * progress;
+}
+
+function getWinModeInput(ti) {
+  const opts = [];
+  // Drifting is off: this track's corners are too short to earn a boost at
+  // racing speed, so the clean grip line is the fastest way round.
+  const driftChoices = !WM.allowDrift ? [{ drift: false, side: 0 }]
+    : kart.isDrifting
+    ? [{ drift: true, side: kart.driftSide }, { drift: false, side: 0 }]
+    : kart.speed > WM.minDriftSpeed
+      ? [{ drift: false, side: 0 }, { drift: true, side: -1 }, { drift: true, side: 1 }]
+      : [{ drift: false, side: 0 }];
+  for (const dc of driftChoices)
+    for (const st of WM.steers)
+      for (const th of [true, false])
+        opts.push({ steer: st, throttle: th, drift: dc.drift, side: dc.side });
+
+  let best = opts[0], bestCost = Infinity;
+  let bestHold = null, bestHoldCost = Infinity;
+  for (const o of opts) {
+    const c = simulateWinOption(o, ti.idx);
+    if (c < bestCost) { bestCost = c; best = o; }
+    if (o.drift && c < bestHoldCost) { bestHoldCost = c; bestHold = o; }
+  }
+  // Commit to a drift long enough to earn a boost, unless it's heading for the wall
+  if (kart.isDrifting && kart.driftTime < WM.minDrift && bestHold && bestHoldCost < bestCost + WM.bailCost) {
+    best = bestHold;
+  }
+  return {
+    steer: best.steer,
+    throttle: best.throttle,
+    brake: !best.throttle,
+    drift: best.drift,
+    driftDir: best.drift ? (kart.isDrifting ? kart.driftSide : best.side) : 0,
+  };
+}
+
+// Camera smoothed values
+const camState = {
+  pos: new THREE.Vector3(),
+  look: new THREE.Vector3(),
+};
+
+// ── Track sampling (arc-length uniform) ──────────
+// Everything that asks "where am I on the track" uses this table. `t` is the
+// fraction of the lap by distance (0 = start/finish line).
+const NS = 800;
+const DS = TRACK_LENGTH / NS;
+const S_PT = [], S_TAN = [], S_RIGHT = [];
+for (let i = 0; i < NS; i++) {
+  const p = trackCurve.getPointAt(i / NS); p.y = 0;
+  const tn = trackCurve.getTangentAt(i / NS); tn.y = 0; tn.normalize();
+  S_PT.push(p); S_TAN.push(tn); S_RIGHT.push(new THREE.Vector3(-tn.z, 0, tn.x));
+}
+
+function getTrackInfo(pos) {
+  let best = 0, bestD2 = Infinity;
+  for (let i = 0; i < NS; i++) {
+    const dx = pos.x - S_PT[i].x, dz = pos.z - S_PT[i].z;
+    const d2 = dx*dx + dz*dz;
+    if (d2 < bestD2) { bestD2 = d2; best = i; }
+  }
+  const pt = S_PT[best], right = S_RIGHT[best];
+  const lat = (pos.x - pt.x) * right.x + (pos.z - pt.z) * right.z; // signed sideways offset
+  return { dist: Math.sqrt(bestD2), t: best / NS, idx: best, lat, point: pt, tan: S_TAN[best], right };
+}
+
+// Quick lap-time estimate along a speed profile (used to calibrate the CPU rival)
+function profileLapTime(ks, ds, vmax, cornerSpeed, acc, brk) {
+  const n = ks.length, v = new Float32Array(n);
+  for (let i = 0; i < n; i++) v[i] = Math.min(vmax, cornerSpeed(Math.max(ks[i], 1e-6)));
+  for (let pass = 0; pass < 3; pass++)
+    for (let i = n - 1; i >= 0; i--) { const nx = v[(i + 1) % n]; v[i] = Math.min(v[i], Math.sqrt(nx * nx + 2 * brk * ds)); }
+  let t = 0, sp = v[0];
+  for (let lap = 0; lap < 2; lap++) { t = 0; for (let i = 0; i < n; i++) { sp = Math.min(v[i], Math.sqrt(sp * sp + 2 * acc * ds)); t += ds / sp; } }
+  return t;
+}
+// The player's rough best lap: 54.5 m/s top speed, 2.7 rad/s max turn rate
+function playerLapEstimate(ks, ds) {
+  return profileLapTime(ks, ds, 54.5, k => 2.7 / k, 45, 40);
+}
+
+// ── CPU rival: racing line + speed profile ───────
+// Precomputed once: an inside-hugging racing line and the fastest speed the
+// rival can carry at every metre of the track (corner limit + braking zones).
+// Tuned on the classic track to 56 / 100 (a 9.9s lap). On a generated track
+// these get rescaled so the rival is exactly as tough relative to you.
+let RIVAL_VMAX = 56;      // player tops out at 55 (≈69 with drift boost)
+let RIVAL_LAT  = 100;     // lateral grip (m/s²)
+const CLASSIC_PLAYER_EST = 10.0666, CLASSIC_RIVAL_LAP = 9.886;
+const RIVAL_ACC  = 32;
+const RIVAL_BRK  = 70;
+const RIVAL_LINE = new Float32Array(NS);
+const RIVAL_VPROF = new Float32Array(NS);
+const TRACK_CURV = new Float32Array(NS);   // |curvature| per sample (1/radius)
+const TRACK_CURV_S = new Float32Array(NS); // signed curvature (negative = bends to the right)
+(function buildRivalProfile() {
+  const curvSigned = new Float32Array(NS), curvAbs = new Float32Array(NS);
+  for (let i = 0; i < NS; i++) {
+    const a = S_TAN[(i - 1 + NS) % NS], b = S_TAN[(i + 1) % NS];
+    const cross = a.z * b.x - a.x * b.z;           // y of a × b
+    const ang = Math.acos(Math.min(1, a.dot(b)));
+    curvAbs[i] = ang / (2 * DS);
+    curvSigned[i] = Math.sign(cross) * curvAbs[i];
+  }
+  const smooth = (arr, w) => {
+    const out = new Float32Array(NS);
+    for (let i = 0; i < NS; i++) {
+      let sum = 0;
+      for (let j = -w; j <= w; j++) sum += arr[(i + j + NS) % NS];
+      out[i] = sum / (2 * w + 1);
+    }
+    return out;
+  };
+  const lineCurv = smooth(curvSigned, 22);
+  const maxOff = TRACK_WIDTH / 2 - 1.8;
+  for (let i = 0; i < NS; i++) {
+    // Turning toward +right gives negative cross, so inside = -sign
+    RIVAL_LINE[i] = Math.max(-maxOff, Math.min(maxOff, -lineCurv[i] * 120));
+  }
+  const ks = smooth(curvAbs, 6);
+  TRACK_CURV.set(ks);
+
+  // Calibrate the rival so its lap is as close to your best as on the classic track
+  const target = CLASSIC_RIVAL_LAP * playerLapEstimate(ks, DS) / CLASSIC_PLAYER_EST;
+  let lo = 0.6, hi = 1.5;
+  for (let it = 0; it < 30; it++) {
+    const k = (lo + hi) / 2;
+    const t = profileLapTime(ks, DS, 56 * k, x => Math.sqrt(100 * k * k / x), RIVAL_ACC, RIVAL_BRK);
+    if (t > target) lo = k; else hi = k;
+  }
+  const kk = (lo + hi) / 2;
+  RIVAL_VMAX = 56 * kk;
+  RIVAL_LAT = 100 * kk * kk;
+
+  TRACK_CURV_S.set(smooth(curvSigned, 6));
+  for (let i = 0; i < NS; i++) RIVAL_VPROF[i] = Math.min(RIVAL_VMAX, Math.sqrt(RIVAL_LAT / Math.max(ks[i], 1e-6)));
+  for (let pass = 0; pass < 3; pass++) {
+    for (let i = NS - 1; i >= 0; i--) {
+      const next = RIVAL_VPROF[(i + 1) % NS];
+      RIVAL_VPROF[i] = Math.min(RIVAL_VPROF[i], Math.sqrt(next * next + 2 * RIVAL_BRK * DS));
+    }
+  }
+})();
+
+const GRID_BACK = 7;   // metres behind the start line
+const GRID_SIDE = 3;   // side-by-side spacing in VS mode
+
+const rival = {
+  s: -GRID_BACK,        // distance travelled from the start line
+  v: 0,
+  yaw: 0,
+  steerVis: 0,
+  pos: new THREE.Vector3(),
+  group: null,
+  raceTime: 0,
+  finished: false,
+  finishTime: 0,
+};
+
+function sampleAt(s) {
+  const u = (((s / TRACK_LENGTH) % 1) + 1) % 1;
+  const f = u * NS, i0 = Math.floor(f) % NS, i1 = (i0 + 1) % NS, k = f - Math.floor(f);
+  return { u, i0, i1, k };
+}
+
+function rivalPose(s, out) {
+  const { i0, i1, k } = sampleAt(s);
+  const line = RIVAL_LINE[i0] * (1 - k) + RIVAL_LINE[i1] * k;
+  // Leave the grid slot and merge onto the racing line over the first 60m
+  const blend = Math.min(Math.max((s + GRID_BACK) / 60, 0), 1);
+  const blendE = blend * blend * (3 - 2 * blend);
+  const off = -GRID_SIDE * (1 - blendE) + line * blendE;
+  out.set(
+    S_PT[i0].x * (1 - k) + S_PT[i1].x * k + (S_RIGHT[i0].x * (1 - k) + S_RIGHT[i1].x * k) * off,
+    0,
+    S_PT[i0].z * (1 - k) + S_PT[i1].z * k + (S_RIGHT[i0].z * (1 - k) + S_RIGHT[i1].z * k) * off
+  );
+  return out;
+}
+
+function placeRivalOnGrid() {
+  rival.s = -GRID_BACK; rival.v = 0;
+  rivalPose(rival.s, rival.pos);
+  const ahead = rivalPose(rival.s + 1, new THREE.Vector3());
+  rival.yaw = Math.atan2(ahead.x - rival.pos.x, ahead.z - rival.pos.z);
+  if (rival.group) {
+    rival.group.position.copy(rival.pos);
+    rival.group.rotation.set(0, rival.yaw, 0);
+  }
+}
+
+let bannerTimer = 0;
+function showBanner(text, secs = 2.5) {
+  const b = document.getElementById('banner');
+  b.textContent = text;
+  b.style.display = 'block';
+  bannerTimer = secs;
+}
+
+function updateRival(dt) {
+  if (!vsMode || !rival.group) return;
+  if (gameState !== 'racing') return;
+
+  rival.raceTime += dt;
+  const { i0 } = sampleAt(rival.s);
+  let target = RIVAL_VPROF[i0];
+  if (rival.finished) target = Math.min(target, 25); // cool-down lap
+  const rfx = fx(rival);
+  if (rfx.slow > 0) target *= 0.65;
+  if (rfx.spin > 0) target = Math.min(target, 8);
+
+  if (rival.v < target) rival.v = Math.min(target, rival.v + RIVAL_ACC * dt);
+  else rival.v = Math.max(target, rival.v - RIVAL_BRK * dt);
+
+  rival.s += rival.v * dt;
+
+  if (!rival.finished && rival.s >= TOTAL_LAPS * TRACK_LENGTH) {
+    rival.finished = true;
+    rival.finishTime = rival.raceTime;
+    if (!kart.finished) showBanner('CPU FINISHED');
+  }
+
+  const prev = rival.pos.clone();
+  rivalPose(rival.s, rival.pos);
+  const dx = rival.pos.x - prev.x, dz = rival.pos.z - prev.z;
+  if (dx*dx + dz*dz > 1e-6) {
+    let newYaw = Math.atan2(dx, dz);
+    let d = newYaw - rival.yaw;
+    while (d >  Math.PI) d -= Math.PI * 2;
+    while (d < -Math.PI) d += Math.PI * 2;
+    rival.yaw += d * Math.min(1, dt * 20);
+    rival.steerVis += (Math.max(-0.045, Math.min(0.045, -d * 0.6)) - rival.steerVis) * Math.min(1, dt * 10);
+  }
+
+  // Bump between karts: the CPU holds its line, the player gets shoved aside
+  const ddx = kart.pos.x - rival.pos.x, ddz = kart.pos.z - rival.pos.z;
+  const dist = Math.sqrt(ddx*ddx + ddz*ddz);
+  const MIN_D = 2.4;
+  if (dist < MIN_D && dist > 0.001) {
+    const push = (MIN_D - dist);
+    kart.pos.x += ddx / dist * push;
+    kart.pos.z += ddz / dist * push;
+    kart.speed *= Math.pow(0.97, dt * 60);
+    if (kartGroup) kartGroup.position.copy(kart.pos);
+  }
+
+  const g = rival.group;
+  g.position.copy(rival.pos);
+  g.rotation.y = rival.yaw + spinAngle(rival);
+  g.rotation.z = -rival.steerVis * 5;
+  g.rotation.x = -0.04;
+  const roll = rival.v * dt * 1.5;
+  g.wheels.forEach(w => { w.rotation.x -= roll; });
+  g.wheels[0].rotation.y = rival.steerVis * 20;
+  g.wheels[1].rotation.y = rival.steerVis * 20;
+}
+
+
+// ══════════════════════════════════════════════════
+//  Grand Prix CPU drivers
+//  Nothing is pre-scripted: each CPU steers, brakes and accelerates live
+//  from what it sees ahead, with its own randomly rolled personality,
+//  random mistakes, overtaking and kart-to-kart bumps.
+// ══════════════════════════════════════════════════
+const CPU_ROSTER = [
+  { name: 'VOLT',   body: 0x00c8ff, glow: 0x00f7ff },
+  { name: 'NOVA',   body: 0xffb000, glow: 0xffee00 },
+  { name: 'RAZOR',  body: 0x22dd55, glow: 0x39ff14 },
+  { name: 'HEX',    body: 0xff3fa4, glow: 0xff00aa },
+  { name: 'PULSE',  body: 0xff6a00, glow: 0xff3300 },
+  { name: 'GHOST',  body: 0xd8d8ff, glow: 0xaaaaff },
+  { name: 'VIPER',  body: 0x7a1cff, glow: 0xbf00ff },
+];
+const cpus = [];
+const rand = (a, b) => a + Math.random() * (b - a);
+
+function makeCpu(def) {
+  const group = buildKart({ body: def.body, bodyEmissive: 0x000000, glow: def.glow });
+  scene.add(group);
+  const skill = Math.random();            // 0 = rookie … 1 = ace
+  return {
+    name: def.name, color: '#' + def.body.toString(16).padStart(6, '0'), group,
+    // personality (re-rolled every race)
+    vmax:       49.5 + skill * 3.6 + rand(-0.4, 0.4), // best ≈ just under the player's 54.5
+    grip:       80 + skill * 35 + rand(-8, 8),
+    acc:        27 + rand(0, 8),
+    brk:        55 + rand(0, 20),
+    lineSkill:  0.5 + skill * 0.5,
+    bias:       rand(-1.2, 1.2),
+    mistakeRate:0.09 - skill * 0.07,       // mistakes per second
+    aggression: rand(0.6, 1.4),
+    mineSense:  skill > 0.3 || Math.random() < 0.5,   // rookies sometimes don't see mines
+    // state
+    pos: new THREE.Vector3(), yaw: 0, dir: new THREE.Vector3(0, 0, 1),
+    speed: 0, steer: 0, idx: 0, lat: 0, lastT: 0,
+    started: false, laps: 0, finished: false, finishTime: 0, raceTime: 0,
+    delay: rand(0.05, 0.4),                // reaction time at GO
+    wander: 0, avoid: 0, wobble: 0, lateBrake: 0, stuckT: 0, offTrack: false,
+  };
+}
+
+function gridSlot(slot) {
+  // Two columns, 6m between rows, everyone behind the line
+  const back = GRID_BACK + Math.floor(slot / 2) * 6;
+  const side = slot % 2 === 0 ? -GRID_SIDE : GRID_SIDE;
+  const t = 1 - back / TRACK_LENGTH;
+  const p = trackCurve.getPointAt(t), tn = trackCurve.getTangentAt(t);
+  const right = new THREE.Vector3(-tn.z, 0, tn.x).normalize();
+  return { pos: p.clone().addScaledVector(right, side).setY(0), yaw: Math.atan2(tn.x, tn.z) };
+}
+// Random grid slot each race (0 = pole … 6 = back of the grid)
+let PLAYER_GP_SLOT = Math.floor(Math.random() * (GP_CPUS + 1));
+
+function setupGrandPrix() {
+  if (cpus.length === 0) {
+    const roster = CPU_ROSTER.slice().sort(() => Math.random() - 0.5).slice(0, GP_CPUS);
+    roster.forEach(def => cpus.push(makeCpu(def)));
+  }
+  let slot = 0;
+  cpus.forEach(c => {
+    if (slot === PLAYER_GP_SLOT) slot++;
+    const g = gridSlot(slot++);
+    c.pos.copy(g.pos); c.yaw = g.yaw;
+    c.dir.set(Math.sin(c.yaw), 0, Math.cos(c.yaw));
+    const ti = getTrackInfo(c.pos);
+    c.idx = ti.idx; c.lat = ti.lat; c.lastT = ti.t;
+    c.group.position.copy(c.pos);
+    c.group.rotation.set(0, c.yaw, 0);
+    c.group.visible = gpMode;
+  });
+}
+
+// Closest-sample search near the last known sample (cheap per-frame lookup)
+function trackInfoNear(pos, idx, range = 60) {
+  let best = idx, bestD2 = Infinity;
+  for (let j = -range; j <= range; j++) {
+    const i = (idx + j + NS) % NS;
+    const dx = pos.x - S_PT[i].x, dz = pos.z - S_PT[i].z;
+    const d2 = dx*dx + dz*dz;
+    if (d2 < bestD2) { bestD2 = d2; best = i; }
+  }
+  const pt = S_PT[best], right = S_RIGHT[best];
+  return { dist: Math.sqrt(bestD2), idx: best, t: best / NS, point: pt, tan: S_TAN[best], right,
+           lat: (pos.x - pt.x) * right.x + (pos.z - pt.z) * right.z };
+}
+
+function cpuProgress(c) {
+  const t = c.idx / NS;
+  if (!c.started) return t > 0.5 ? t - 1 : t;
+  return c.laps + t;
+}
+
+function updateCpu(c, dt, others, playerProg) {
+  c.raceTime += dt;
+  if (c.delay > 0) { c.delay -= dt; return; }
+
+  const ti = trackInfoNear(c.pos, c.idx);
+  c.idx = ti.idx; c.lat = ti.lat;
+  const spd = Math.max(c.speed, 0);
+
+  // ── Random behaviour: drifting off-line, wobbles, late braking ──
+  c.wander += rand(-1, 1) * dt * 4;
+  c.wander *= Math.pow(0.5, dt);
+  c.wander = Math.max(-1.6, Math.min(1.6, c.wander));
+  if (Math.random() < c.mistakeRate * dt) {
+    if (Math.random() < 0.5) c.wobble = rand(0.4, 0.9);
+    else c.lateBrake = rand(0.4, 0.8);
+  }
+  c.wobble = Math.max(0, c.wobble - dt);
+  c.lateBrake = Math.max(0, c.lateBrake - dt);
+
+  // ── Traffic: look for karts just ahead on a similar line and go round ──
+  let avoidTarget = 0, followSpeed = Infinity;
+  for (const o of others) {
+    if (o === c) continue;
+    if (o.isMine && !c.mineSense) continue;
+    let d = ((o.idx - c.idx + NS) % NS) * DS;
+    if (d > TRACK_LENGTH / 2) continue;           // behind us
+    if (d < 0.5 || d > 16) continue;
+    const dl = c.lat - o.lat;
+    if (Math.abs(dl) < 2.8) {
+      const dirSide = Math.abs(dl) > 0.2 ? Math.sign(dl) : (o.lat > 0 ? -1 : 1);
+      // prefer the side with more room
+      const room = dirSide > 0 ? (TRACK_WIDTH/2 - o.lat) : (TRACK_WIDTH/2 + o.lat);
+      const side = room > 3.2 ? dirSide : -dirSide;
+      avoidTarget += side * (3.0 - Math.abs(dl)) * 1.3 * c.aggression;
+      if (d < 7 && !o.isMine) followSpeed = Math.min(followSpeed, (o.speed ?? 0) + 6 * c.aggression);
+    }
+  }
+  c.avoid += (avoidTarget - c.avoid) * Math.min(1, dt * 4);
+
+  // ── Steering: chase a point on (their version of) the racing line ──
+  const look = 6 + spd * 0.28;
+  const aIdx = (c.idx + Math.round(look / DS)) % NS;
+  const maxOff = TRACK_WIDTH / 2 - 1.8;
+  let off = RIVAL_LINE[aIdx] * c.lineSkill + c.bias + c.wander + c.avoid;
+  // Clipping the kerb? steer back out
+  const edge = TRACK_WIDTH / 2 - 1.2;
+  if (Math.abs(c.lat) > edge) off -= Math.sign(c.lat) * (Math.abs(c.lat) - edge) * 3;
+  off = Math.max(-maxOff, Math.min(maxOff, off));
+  const ax = S_PT[aIdx].x + S_RIGHT[aIdx].x * off;
+  const az = S_PT[aIdx].z + S_RIGHT[aIdx].z * off;
+  let diff = Math.atan2(ax - c.pos.x, az - c.pos.z) - c.yaw;
+  while (diff >  Math.PI) diff -= Math.PI * 2;
+  while (diff < -Math.PI) diff += Math.PI * 2;
+  let targetSteer = Math.max(-1, Math.min(1, -diff * 3.5));
+  const cfx = fx(c);
+  if (cfx.spin > 0) targetSteer = 0;
+  if (c.wobble > 0) targetSteer += Math.sin(c.raceTime * 14) * 0.7;
+  const steerMax = 0.045;
+  c.steer += (targetSteer * steerMax - c.steer) * Math.min(1, 6 * dt);
+  c.steer = Math.max(-steerMax, Math.min(steerMax, c.steer));
+
+  // ── Speed: read the corners ahead and decide how fast is safe ──
+  let vT = c.vmax * (cfx.nitro > 0 ? 1.25 : 1);
+  for (let d = 0; d <= 75; d += 5) {
+    const k = TRACK_CURV[(c.idx + Math.round(d / DS)) % NS];
+    // grip limit, and the kart's max turn rate (2.7 rad/s) with a little margin
+    const vc = Math.min(Math.sqrt(c.grip / Math.max(k, 1e-6)), 2.45 / Math.max(k, 1e-6));
+    vT = Math.min(vT, Math.sqrt(vc * vc + 2 * c.brk * d));
+  }
+  if (c.lateBrake > 0) vT *= 1.18;               // overcooks it into a corner
+  if (Math.abs(diff) > 0.5) vT *= 0.7;           // badly out of shape
+  vT = Math.min(vT, followSpeed);
+  // Mild catch-up / ease-off relative to the player keeps the pack together
+  // (no catch-up boost against Win Mode — it's meant to win)
+  const gap = cpuProgress(c) - playerProg;
+  const g = kart.winMode ? Math.max(0, Math.min(1, gap)) : Math.max(-1, Math.min(1, gap));
+  vT *= 1 - g * 0.035;
+  if (c.finished) vT = Math.min(vT, 22);
+  if (cfx.slow > 0) vT *= 0.65;
+  if (cfx.spin > 0) vT = Math.min(vT, 8);
+
+  // ── Physics (same sticky off-track rules as the player) ──
+  c.offTrack = ti.dist > TRACK_WIDTH / 2 + 1;
+  if (c.offTrack) {
+    c.speed += 22 * dt;
+    c.speed *= Math.pow(0.93, dt * 60);
+  } else if (c.speed < vT) {
+    c.speed = Math.min(vT, c.speed + c.acc * (cfx.nitro > 0 ? 1.8 : 1) * dt);
+  } else {
+    c.speed = Math.max(vT, c.speed - c.brk * dt);
+  }
+
+  const speedFactor = Math.min(Math.abs(c.speed) / 20, 1);
+  c.yaw -= c.steer * speedFactor * 60 * dt;
+  c.dir.set(Math.sin(c.yaw), 0, Math.cos(c.yaw));
+  c.pos.addScaledVector(c.dir, c.speed * dt);
+
+  const t2 = trackInfoNear(c.pos, c.idx);
+  if (t2.dist > TRACK_WIDTH / 2 + 2.5) {
+    const push = new THREE.Vector3(t2.point.x - c.pos.x, 0, t2.point.z - c.pos.z).normalize();
+    c.pos.addScaledVector(push, (t2.dist - TRACK_WIDTH / 2 - 2.5) * 0.3);
+    c.speed *= Math.pow(0.88, dt * 60);
+  }
+  c.idx = t2.idx; c.lat = t2.lat;
+
+  // Stuck? Do what a human would do and hit reset
+  if (c.speed < 4) c.stuckT += dt; else c.stuckT = 0;
+  if (c.stuckT > 1.6) {
+    c.pos.set(t2.point.x, 0, t2.point.z);
+    c.yaw = Math.atan2(t2.tan.x, t2.tan.z);
+    c.speed = 0; c.steer = 0; c.stuckT = 0; c.wobble = 0;
+  }
+
+  // Laps
+  const currT = t2.t, prevT = c.lastT;
+  if (prevT > 0.9 && currT < 0.1) {
+    if (!c.started) c.started = true;
+    else {
+      c.laps++;
+      if (!c.finished && c.laps >= GP_LAPS) {
+        c.finished = true;
+        c.finishTime = c.raceTime;
+        if (!kart.finished && !cpus.some(o => o !== c && o.finished)) showBanner(`${c.name} WINS!`);
+      }
+    }
+  } else if (prevT < 0.1 && currT > 0.9 && c.started) {
+    if (c.laps > 0) c.laps--; else c.started = false;
+  }
+  c.lastT = currT;
+}
+
+function updateCpus(dt) {
+  if (NET.active && NET.raceOn) {
+    netUpdatePuppets(dt);                      // other players (and, on clients, the host's CPUs)
+    if (!NET.isHost) { if (gameState === 'racing') netLocalBumps(dt); return; }
+  }
+  if (!gpMode || !(gameState === 'racing' || netHostLive())) return;
+  const playerProg = kart.finished ? GP_LAPS : playerProgress();
+  if (kart.idx === undefined) { const ti = getTrackInfo(kart.pos); kart.idx = ti.idx; kart.lat = ti.lat; }
+  const all = (kart.finished && NET.active) || kart.alt > 1.2 ? cpus.slice() : cpus.concat([kart]);   // fly over them
+  const seen = all.concat(NET.remotes.filter(r => !r.gone && !r.finished), mines);
+  cpus.forEach(c => updateCpu(c, dt, seen, playerProg));
+
+  // Kart-to-kart bumps (everyone gets shoved equally)
+  const MIN_D = 2.4;
+  for (let i = 0; i < all.length; i++) {
+    for (let j = i + 1; j < all.length; j++) {
+      const a = all[i], b = all[j];
+      const dx = a.pos.x - b.pos.x, dz = a.pos.z - b.pos.z;
+      const d = Math.sqrt(dx*dx + dz*dz);
+      if (d < MIN_D && d > 0.001) {
+        const push = (MIN_D - d) / 2;
+        a.pos.x += dx / d * push; a.pos.z += dz / d * push;
+        b.pos.x -= dx / d * push; b.pos.z -= dz / d * push;
+        // the kart behind loses a bit of speed
+        const aAhead = ((a.idx - b.idx + NS) % NS) < NS / 2;
+        const behind = aAhead ? b : a;
+        behind.speed *= Math.pow(0.95, dt * 60);
+      }
+    }
+  }
+  if (kartGroup) kartGroup.position.copy(kart.pos);
+  if (NET.active && NET.raceOn) netLocalBumps(dt);
+
+  // Visuals
+  cpus.forEach(c => {
+    const g = c.group;
+    g.position.copy(c.pos);
+    g.rotation.y = c.yaw + spinAngle(c);
+    g.rotation.z = -c.steer * 5;
+    g.rotation.x = c.speed > 0 ? -0.04 : 0;
+    g.wheels.forEach(w => { w.rotation.x -= c.speed * dt * 1.5; });
+    g.wheels[0].rotation.y = c.steer * 20;
+    g.wheels[1].rotation.y = c.steer * 20;
+    if (c.offTrack && c.speed > 6 && Math.random() < 0.5) {
+      const p = c.pos.clone().addScaledVector(c.dir, -1.5); p.y = 0.2;
+      smokeParticles.emit(p, new THREE.Vector3(rand(-1.5, 1.5), rand(1, 2.5), rand(-1.5, 1.5)), 0.7);
+    }
+  });
+}
+
+// Full running order: [{name, color, me, prog, finished, time}]
+function gpStandings() {
+  const rows = cpus.map(c => ({ name: c.name, color: c.color, me: false,
+    prog: c.finished ? GP_LAPS : cpuProg(c), finished: c.finished, time: c.finishTime }));
+  if (NET.active && NET.raceOn) for (const r of NET.remotes) if (!r.gone)
+    rows.push({ name: r.name, color: r.color, me: false, prog: r.finished ? GP_LAPS : r.prog, finished: r.finished, time: r.finishTime });
+  rows.push({ name: NET.active && NET.raceOn ? NET.name : 'YOU', color: NET.active && NET.raceOn ? myColor().css : '#ee2222', me: true,
+    prog: kart.finished ? GP_LAPS : playerProgress(), finished: kart.finished, time: kart.totalTime });
+  rows.sort((a, b) => {
+    if (a.finished && b.finished) return a.time - b.time;
+    if (a.finished) return -1;
+    if (b.finished) return 1;
+    return b.prog - a.prog;
+  });
+  return rows;
+}
+
+let standingsTimer = 0;
+function updateStandingsHUD(dt) {
+  standingsTimer -= dt;
+  if (standingsTimer > 0) return;
+  standingsTimer = 0.2;
+  const rows = gpStandings();
+  const myPos = rows.findIndex(r => r.me) + 1;
+  document.getElementById('pos-value').innerHTML = `${myPos}<small>/${rows.length}</small>`;
+  let gapTxt = 'GRAND PRIX';
+  if (gameState === 'racing') {
+    const i = myPos - 1;
+    const ref = i > 0 ? rows[i - 1] : rows[i + 1];
+    if (ref) {
+      const gapS = Math.abs(rows[i].prog - ref.prog) * TRACK_LENGTH / 45;
+      gapTxt = (i > 0 ? `${ref.name} +` : `${ref.name} −`) + gapS.toFixed(2) + 's';
+    }
+  }
+  document.getElementById('pos-gap').textContent = gapTxt;
+  document.getElementById('standings').innerHTML = rows.map((r, i) =>
+    `<div class="row${r.me ? ' me' : ''}"><span class="p">${i + 1}</span>` +
+    `<span class="dot" style="background:${r.color};box-shadow:0 0 6px ${r.color}"></span>${r.name}` +
+    (r.finished ? '<span class="done">🏁</span>' : '') + `</div>`).join('');
+}
+
+
+// ══════════════════════════════════════════════════
+//  Items: "?" cubes, a roulette, and six power-ups
+//  Everyone (you, Grand Prix CPUs) picks them up by driving through cubes.
+//  Better items go to whoever is further back.
+// ══════════════════════════════════════════════════
+const ITEMS = {
+  nitro:  { name: 'NITRO',        icon: '🚀', uses: 1 },
+  nitro3: { name: 'TRIPLE NITRO', icon: '🚀', uses: 3 },
+  mine:   { name: 'PULSE MINE',   icon: '💣', uses: 1 },
+  orb:    { name: 'HOMING ORB',   icon: '🔮', uses: 1 },
+  shield: { name: 'SHIELD',       icon: '🛡️', uses: 1 },
+  storm:  { name: 'STORM',        icon: '🌩️', uses: 1 },
+};
+const ITEM_KEYS = Object.keys(ITEMS);
+const CUBE_RESPAWN = 4, ROULETTE_TIME = 1.1;
+const SPIN_TIME = 1.2, NITRO_TIME = 2.5, SHIELD_TIME = 8, STORM_TIME = 2.5;
+const ORB_SPEED = 90;
+const cubes = [], mines = [], orbs = [];
+
+function makeQuestionTexture() {
+  const cv = document.createElement('canvas');
+  cv.width = cv.height = 128;
+  const g = cv.getContext('2d');
+  const grad = g.createLinearGradient(0, 0, 128, 128);
+  grad.addColorStop(0, '#00f7ff'); grad.addColorStop(0.5, '#bf00ff'); grad.addColorStop(1, '#ff0080');
+  g.fillStyle = grad; g.fillRect(0, 0, 128, 128);
+  g.fillStyle = 'rgba(10,0,25,0.55)'; g.fillRect(10, 10, 108, 108);
+  g.strokeStyle = '#ffffff'; g.lineWidth = 4; g.strokeRect(10, 10, 108, 108);
+  g.font = 'bold 92px Arial, sans-serif';
+  g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.shadowColor = '#ffd700'; g.shadowBlur = 16;
+  g.fillStyle = '#ffffff'; g.fillText('?', 64, 70);
+  const tex = new THREE.CanvasTexture(cv);
+  tex.encoding = THREE.sRGBEncoding;
+  return tex;
+}
+
+function buildItemCubes() {
+  const tex = makeQuestionTexture();
+  const mat = new THREE.MeshStandardMaterial({
+    map: tex, emissive: 0xffffff, emissiveMap: tex, emissiveIntensity: 0.85,
+    transparent: true, opacity: 0.93, roughness: 0.35, metalness: 0.1,
+  });
+  const geo = new THREE.BoxGeometry(1.5, 1.5, 1.5);
+  // Four rows of four cubes spread around the lap
+  [0.13, 0.38, 0.63, 0.87].forEach(f => {
+    const idx = Math.round(f * NS) % NS;
+    [-4.5, -1.5, 1.5, 4.5].forEach(lat => {
+      const p = S_PT[idx].clone().addScaledVector(S_RIGHT[idx], lat);
+      const m = new THREE.Mesh(geo, mat);
+      m.position.set(p.x, 1.3, p.z);
+      m.castShadow = true;
+      scene.add(m);
+      cubes.push({ mesh: m, pos: new THREE.Vector3(p.x, 0, p.z), respawn: 0, phase: Math.random() * 6 });
+    });
+  });
+}
+
+// Per-kart item/effect state (works for the player, GP CPUs and the VS rival)
+function fx(o) {
+  if (!o.fx) o.fx = { spin: 0, spinTotal: 1, spinTurns: 2, slow: 0, shield: 0, nitro: 0,
+                      item: null, uses: 0, rolling: 0, pending: null, delay: 0, shieldMesh: null };
+  return o.fx;
+}
+function spinAngle(o) {
+  const f = o.fx;
+  if (!f || f.spin <= 0) return 0;
+  return (1 - f.spin / f.spinTotal) * Math.PI * 2 * f.spinTurns;
+}
+
+// Everyone currently racing, with progress (laps) and track position
+function racers() {
+  const list = [];
+  list.push({ o: kart, kind: 'player', name: 'YOU', group: kartGroup, pos: kart.pos, dir: kart.dir,
+              p: kart.finished ? totalLaps() + 1 : playerProgress(),
+              idx: kart.idx ?? getTrackInfo(kart.pos).idx });
+  if (vsMode && rival.group) {
+    list.push({ o: rival, kind: 'rival', name: 'CPU', group: rival.group, pos: rival.pos,
+                dir: new THREE.Vector3(Math.sin(rival.yaw), 0, Math.cos(rival.yaw)),
+                p: rival.s / TRACK_LENGTH, idx: sampleAt(rival.s).i0 });
+  }
+  if (gpMode) cpus.forEach(c => list.push({ o: c, kind: 'cpu', name: c.name, group: c.group, pos: c.pos,
+                                            dir: c.dir, p: c.finished ? GP_LAPS + 1 : cpuProg(c), idx: c.idx }));
+  if (NET.active && NET.raceOn) for (const r of NET.remotes) if (!r.gone)
+    list.push({ o: r, kind: 'remote', name: r.name, group: r.group, pos: r.pos, dir: r.dir,
+                p: r.finished ? GP_LAPS + 1 : r.prog, idx: r.idx });
+  return list;
+}
+
+function mulSpeed(r, m) {
+  if (r.kind === 'rival') rival.v *= m; else r.o.speed *= m;
+}
+
+function burst(pos, n = 18, life = 0.6) {
+  for (let i = 0; i < n; i++) {
+    const p = pos.clone(); p.y = 1;
+    driftParticles.emit(p, new THREE.Vector3(rand(-6, 6), rand(2, 7), rand(-6, 6)), life);
+  }
+}
+
+function rollItem(r, list) {
+  if (list.length === 1) return Math.random() < 0.7 ? 'nitro' : 'nitro3';   // solo: speed items
+  const sorted = list.slice().sort((a, b) => b.p - a.p);
+  const rank = sorted.indexOf(r), n = sorted.length;
+  const t = rank / (n - 1);                       // 0 = leading … 1 = last
+  const w = {
+    nitro:  30,
+    nitro3: 5 + 30 * t,
+    mine:   5 + 30 * (1 - t),
+    orb:    rank === 0 ? 0 : 10 + 20 * t,
+    shield: 5 + 20 * (1 - t),
+    storm:  t > 0.6 ? 14 * t : 0,
+  };
+  let total = 0; for (const k in w) total += w[k];
+  let x = Math.random() * total;
+  for (const k of ITEM_KEYS) { x -= w[k]; if (x <= 0) return k; }
+  return 'nitro';
+}
+
+function hitRacer(r, type, by, proj = null, fromNet = false, blocked = false) {
+  const f = fx(r.o);
+  if (fromNet) {
+    // someone else's game decided this hit on its own kart — just show it here
+    burst(r.pos, blocked ? 14 : 24);
+    if (blocked) recEvent('block', { victim: kartIndex(r.o), by: by ? kartIndex(by.o) : -1, victimName: r.name });
+    else {
+      recEvent('hit', { victim: kartIndex(r.o), by: by ? kartIndex(by.o) : -1, item: type, victimName: r.name, byName: by && by.o !== r.o ? by.name : '' });
+      if (by && by.kind === 'player') showBanner(`💥 HIT ${r.name}!`, 1.2);
+    }
+    return;
+  }
+  if (f.shield > 0) {
+    netSend({ k: 'hit', v: r.o.netId, type, by: by ? by.o.netId : null, proj, blocked: true });
+    f.shield = 0;
+    if (f.shieldMesh) { f.shieldMesh.parent.remove(f.shieldMesh); f.shieldMesh = null; }
+    burst(r.pos, 14);
+    if (r.kind === 'player') showBanner('SHIELD BLOCKED!', 1.2);
+    recEvent('block', { victim: kartIndex(r.o), by: by ? kartIndex(by.o) : -1, victimName: r.name });
+    return;
+  }
+  if (type === 'storm') {
+    f.slow = STORM_TIME;
+    f.spin = f.spinTotal = 0.6; f.spinTurns = 1;
+    mulSpeed(r, 0.6);
+  } else {
+    f.spin = f.spinTotal = SPIN_TIME; f.spinTurns = 2;
+    f.nitro = 0;
+    mulSpeed(r, 0.3);
+    if (r.kind === 'player') kart.driftBoost = 0;
+  }
+  burst(r.pos, 24);
+  netSend({ k: 'hit', v: r.o.netId, type, by: by ? by.o.netId : null, proj });
+  recEvent('hit', { victim: kartIndex(r.o), by: by ? kartIndex(by.o) : -1, item: type, victimName: r.name,
+                    byName: by && by.o !== r.o ? by.name : '' });
+  if (r.kind === 'player') showBanner(type === 'storm' ? '🌩️ STORM!' : '💥 HIT!', 1.2);
+  else if (by && by.kind === 'player') showBanner(`💥 HIT ${r.name}!`, 1.2);
+}
+
+function useItem(r) {
+  const f = fx(r.o);
+  if (!f.item || f.rolling > 0) return;
+  const list = racers();
+  const me = list.find(x => x.o === r.o) || r;
+  switch (f.item) {
+    case 'nitro':
+    case 'nitro3': {
+      f.nitro = NITRO_TIME;
+      if (me.kind === 'player') {
+        recEvent('boost');
+        kart.driftBoost = Math.max(kart.driftBoost, NITRO_TIME);
+        kart.speed = Math.max(kart.speed, Math.min(kart.speed + 10, MAX_SPEED));
+      }
+      break;
+    }
+    case 'mine': {
+      const p = me.pos.clone().addScaledVector(me.dir, -2.8); p.y = 0;
+      const m = spawnMine(p, me.o, newProjId());
+      netSend({ k: 'mine', id: m.id, x: +p.x.toFixed(2), z: +p.z.toFixed(2), owner: me.o.netId });
+      break;
+    }
+    case 'orb': {
+      // Lock onto the closest racer ahead (within half a lap)
+      let target = null, best = Infinity;
+      for (const o of list) {
+        if (o.o === me.o) continue;
+        const d = o.p - me.p;
+        if (d > 0 && d < 0.5 && d < best) { best = d; target = o; }
+      }
+      const ti = getTrackInfo(me.pos);
+      const o = spawnOrb(ti.idx * DS + 3, ti.lat, target ? target.o : null, me.o, target ? 6 : 3, newProjId());
+      netSend({ k: 'orb', id: o.id, s: +o.s.toFixed(2), lat: +o.lat.toFixed(2), target: target ? target.o.netId : null, owner: me.o.netId, life: o.life });
+      break;
+    }
+    case 'shield': {
+      f.shield = SHIELD_TIME;
+      if (!f.shieldMesh && me.group) {
+        f.shieldMesh = new THREE.Mesh(new THREE.SphereGeometry(2.1, 20, 14),
+          new THREE.MeshBasicMaterial({ color: 0x00f7ff, transparent: true, opacity: 0.22,
+                                        blending: THREE.AdditiveBlending, depthWrite: false }));
+        f.shieldMesh.position.y = 0.8;
+        me.group.add(f.shieldMesh);
+      }
+      break;
+    }
+    case 'storm': {
+      let n = 0;
+      // online: each game zaps the karts it controls
+      netSend({ k: 'storm', by: me.o.netId, p: me.p });
+      for (const o of list) if (o.o !== me.o && o.p > me.p) { n++; if (netOwns(o)) hitRacer(o, 'storm', me); }
+      if (me.kind === 'player') showBanner(n ? `🌩️ STORM HITS ${n}!` : '🌩️ STORM', 1.2);
+      break;
+    }
+  }
+  f.uses--;
+  if (f.uses <= 0) { f.item = null; f.uses = 0; }
+}
+
+// How the CPUs (and Win Mode) decide when to use what they're holding
+function aiUseItem(r, list, dt) {
+  const f = fx(r.o);
+  if (!f.item || f.rolling > 0) return;
+  f.delay -= dt;
+  if (f.delay > 0) return;
+  switch (f.item) {
+    case 'nitro':
+    case 'nitro3': {
+      if (f.nitro > 0) return;
+      let worst = 0;
+      for (let d = 0; d <= 70; d += 5) worst = Math.max(worst, TRACK_CURV[(r.idx + Math.round(d / DS)) % NS]);
+      if (worst < 1 / 40 || f.delay < -6) { useItem(r); f.delay = 0.4; }
+      break;
+    }
+    case 'shield':
+    case 'storm':
+      useItem(r);
+      break;
+    case 'mine': {
+      const behind = list.some(o => o.o !== r.o && r.p - o.p > 0 && (r.p - o.p) * TRACK_LENGTH < 30);
+      if (behind || f.delay < -8) useItem(r);
+      break;
+    }
+    case 'orb': {
+      const ahead = list.some(o => o.o !== r.o && o.p - r.p > 0 && (o.p - r.p) * TRACK_LENGTH < 150);
+      if (ahead || f.delay < -10) useItem(r);
+      break;
+    }
+  }
+}
+
+function updateItems(dt) {
+  const t = performance.now() / 1000;
+  // cubes spin and bob all the time
+  for (const c of cubes) {
+    if (c.respawn > 0) {
+      c.respawn -= dt;
+      if (c.respawn <= 0) { c.mesh.visible = true; c.mesh.scale.setScalar(0.01); }
+      continue;
+    }
+    c.mesh.rotation.y += dt * 1.6;
+    c.mesh.rotation.x = Math.sin(t * 1.3 + c.phase) * 0.3;
+    c.mesh.position.y = 1.3 + Math.sin(t * 2 + c.phase) * 0.18;
+    if (c.mesh.scale.x < 1) c.mesh.scale.setScalar(Math.min(1, c.mesh.scale.x + dt * 3));
+  }
+  for (const m of mines) {
+    m.core.material.emissiveIntensity = 0.5 + 0.5 * Math.abs(Math.sin(t * 6));
+    m.mesh.rotation.y += dt * 2;
+  }
+  if (gameState !== 'racing' && !netHostLive()) return;
+
+  const list = racers();
+
+  // pick-ups
+  for (let ci = 0; ci < cubes.length; ci++) {
+    const c = cubes[ci];
+    if (c.respawn > 0) continue;
+    for (const r of list) {
+      if (r.kind === 'rival') continue;                  // the rail-bound rival doesn't use items
+      if (!netOwns(r)) continue;                         // other players pick up cubes in their own game
+      const dx = r.pos.x - c.pos.x, dz = r.pos.z - c.pos.z;
+      if (dx * dx + dz * dz < 1.9 * 1.9) {
+        c.respawn = CUBE_RESPAWN;
+        c.mesh.visible = false;
+        burst(c.pos, 12, 0.5);
+        netSend({ k: 'cube', i: ci });
+        const f = fx(r.o);
+        if (!f.item && f.rolling <= 0 && !(r.kind === 'player' && kart.finished)) {
+          f.rolling = ROULETTE_TIME;
+          f.pending = rollItem(r, list);
+        }
+        break;
+      }
+    }
+  }
+
+  // timers, roulette, shields
+  for (const r of list) {
+    const f = fx(r.o);
+    if (!netOwns(r)) {                                  // remote karts: just show their boost flames
+      if (f.nitro > 0) driftParticles.emit(r.pos.clone().addScaledVector(r.dir, -1.8).setY(0.3), new THREE.Vector3(rand(-1, 1), rand(1, 3), rand(-1, 1)), 0.4);
+      continue;
+    }
+    if (f.rolling > 0) {
+      f.rolling -= dt;
+      if (f.rolling <= 0) {
+        f.item = f.pending; f.uses = ITEMS[f.item].uses; f.delay = rand(0.6, 3);
+        if (r.kind === 'player') showBanner(`${ITEMS[f.item].icon} ${ITEMS[f.item].name}`, 1);
+      }
+    }
+    f.spin = Math.max(0, f.spin - dt);
+    f.slow = Math.max(0, f.slow - dt);
+    f.nitro = Math.max(0, f.nitro - dt);
+    if (f.shield > 0) {
+      f.shield -= dt;
+      if (f.shieldMesh) {
+        f.shieldMesh.visible = f.shield > 1.5 || Math.floor(f.shield * 10) % 2 === 0;
+        f.shieldMesh.rotation.y += dt;
+      }
+      if (f.shield <= 0 && f.shieldMesh) { f.shieldMesh.parent.remove(f.shieldMesh); f.shieldMesh = null; }
+    }
+    // nitro flames
+    if (f.nitro > 0 && r.kind !== 'player') {
+      const p = r.pos.clone().addScaledVector(r.dir, -1.8); p.y = 0.3;
+      driftParticles.emit(p, new THREE.Vector3(rand(-1, 1), rand(1, 3), rand(-1, 1)), 0.4);
+    }
+    // CPUs and Win Mode use their items
+    if (r.kind === 'cpu' || (r.kind === 'player' && kart.winMode && !kart.finished)) aiUseItem(r, list, dt);
+  }
+
+  // mines
+  for (let i = mines.length - 1; i >= 0; i--) {
+    const m = mines[i];
+    m.arm -= dt; m.life -= dt;
+    let boom = m.life <= 0;
+    if (!boom) {
+      for (const r of list) {
+        if (r.o === m.owner && m.arm > 0) continue;
+        if (!netOwns(r) || r.o.finished || (r.kind === 'player' && kart.finished)) continue;
+        if (r.kind === 'player' && kart.alt > 1.2) continue;           // jetpacking over it
+        const dx = r.pos.x - m.pos.x, dz = r.pos.z - m.pos.z;
+        if (dx * dx + dz * dz < 1.9 * 1.9) {
+          hitRacer(r, 'mine', list.find(x => x.o === m.owner), m.id);
+          boom = true; break;
+        }
+      }
+    }
+    if (boom) { burst(m.pos, 20); scene.remove(m.mesh); mines.splice(i, 1); }
+  }
+
+  // homing orbs
+  for (let i = orbs.length - 1; i >= 0; i--) {
+    const o = orbs[i];
+    o.life -= dt;
+    o.s += ORB_SPEED * dt;
+    if (o.target) {
+      const tLat = getTrackInfo(o.target.pos).lat;
+      o.lat += (tLat - o.lat) * Math.min(1, dt * 5);
+    }
+    const { i0, i1, k } = sampleAt(o.s);
+    const x = S_PT[i0].x * (1 - k) + S_PT[i1].x * k + (S_RIGHT[i0].x * (1 - k) + S_RIGHT[i1].x * k) * o.lat;
+    const z = S_PT[i0].z * (1 - k) + S_PT[i1].z * k + (S_RIGHT[i0].z * (1 - k) + S_RIGHT[i1].z * k) * o.lat;
+    o.mesh.position.set(x, 1 + Math.sin(t * 12) * 0.15, z);
+    if (Math.random() < 0.6) {
+      driftParticles.emit(new THREE.Vector3(x, 1, z), new THREE.Vector3(rand(-1, 1), rand(0, 1.5), rand(-1, 1)), 0.3);
+    }
+    let gone = o.life <= 0;
+    if (!gone) {
+      for (const r of list) {
+        if (r.o === o.owner) continue;
+        if (!netOwns(r) || r.o.finished || (r.kind === 'player' && kart.finished)) continue;
+        if (r.kind === 'player' && kart.alt > 1.6) continue;           // too high for the orb
+        const dx = r.pos.x - x, dz = r.pos.z - z;
+        if (dx * dx + dz * dz < 2.0 * 2.0) {
+          hitRacer(r, 'orb', list.find(q => q.o === o.owner), o.id);
+          gone = true; break;
+        }
+      }
+    }
+    if (gone) { burst(o.mesh.position, 14, 0.4); scene.remove(o.mesh); orbs.splice(i, 1); }
+  }
+}
+
+let itemHudTick = 0;
+function updateItemHUD(dt) {
+  const f = fx(kart);
+  const slot = document.getElementById('item-slot');
+  const icon = document.getElementById('item-icon');
+  const name = document.getElementById('item-name');
+  const uses = document.getElementById('item-uses');
+  const key = document.getElementById('item-key');
+  slot.classList.toggle('rolling', f.rolling > 0);
+  slot.classList.toggle('has', !!f.item && f.rolling <= 0);
+  if (f.rolling > 0) {
+    itemHudTick -= dt;
+    if (itemHudTick <= 0) {
+      itemHudTick = 0.07;
+      icon.textContent = ITEMS[ITEM_KEYS[Math.floor(Math.random() * ITEM_KEYS.length)]].icon;
+    }
+    name.textContent = '· · ·';
+    uses.style.display = key.style.display = 'none';
+  } else if (f.item) {
+    icon.textContent = ITEMS[f.item].icon;
+    name.textContent = ITEMS[f.item].name + (kart.winMode ? '' : ' · PRESS E');
+    uses.style.display = f.uses > 1 ? 'block' : 'none';
+    uses.textContent = '×' + f.uses;
+    key.style.display = 'block';
+  } else {
+    icon.textContent = '';
+    name.textContent = f.shield > 0 ? `🛡️ SHIELD ${Math.ceil(f.shield)}s` : '';
+    uses.style.display = key.style.display = 'none';
+  }
+}
+
+// Race progress in laps (negative before crossing the line from the grid)
+function playerProgress() {
+  const t = getTrackInfo(kart.pos).t;
+  if (!kart.started) return t > 0.5 ? t - 1 : t;
+  return kart.lapCount + t;
+}
+
+
+// ── HUD update ────────────────────────────────────
+let wrongWayTimer = 0;
+function updateHUD(dt) {
+  const kmh = Math.round(Math.abs(kart.speed) * 4.5);
+  document.getElementById('speed-value').textContent = kmh;
+  document.getElementById('speed-bar').style.width = Math.min(100, kmh / MAX_KMH * 100) + '%';
+
+  // Lap timer
+  if (gameState === 'racing') {
+    kart.lapTime = (performance.now() - kart.lapStartTime) / 1000;
+    kart.totalTime += dt;
+  }
+  const t = kart.lapTime;
+  const mins = Math.floor(t / 60).toString().padStart(2,'0');
+  const secs = Math.floor(t % 60).toString().padStart(2,'0');
+  const ms   = Math.floor((t % 1) * 1000).toString().padStart(3,'0');
+  document.getElementById('lap-timer').textContent = `${mins}:${secs}.${ms}`;
+  document.getElementById('lap-count').textContent = `LAP ${Math.min(kart.lapCount+1, totalLaps())} / ${totalLaps()}`;
+
+  if (kart.bestLap < Infinity) {
+    const b = kart.bestLap;
+    const bm = Math.floor(b/60).toString().padStart(2,'0');
+    const bs = Math.floor(b%60).toString().padStart(2,'0');
+    const bms = Math.floor((b%1)*1000).toString().padStart(3,'0');
+    document.getElementById('best-lap').textContent = `BEST ${bm}:${bs}.${bms}`;
+  }
+
+  // Drift / boost indicators
+  document.getElementById('ind-drift').classList.toggle('active', kart.isDrifting);
+  const jetPill = document.getElementById('ind-jet');
+  jetPill.classList.toggle('active', kart.jet);
+  jetPill.classList.toggle('ready', !kart.jet && kart.fuel >= JET_MIN_FUEL);
+  jetPill.querySelector('.fuel i').style.width = (kart.fuel / JET_FUEL * 100) + '%';
+  const boostPill = document.getElementById('ind-boost');
+  boostPill.classList.toggle('active', kart.driftBoost > 0.1);
+  boostPill.classList.toggle('ready', kart.boostCooldown === 0 && kart.driftBoost <= 0.1);
+  boostPill.textContent = kart.driftBoost > 0.1 ? '⚡ BOOSTING'
+    : kart.boostCooldown > 0 ? `⚡ BOOST ${Math.ceil(kart.boostCooldown)}s`
+    : '⚡ BOOST READY [B]';
+  document.getElementById('ind-auto').classList.toggle('active', kart.autopilot);
+  document.getElementById('ind-win').classList.toggle('active', kart.winMode);
+
+  updateItemHUD(dt);
+
+  // Position
+  if (gpMode) updateStandingsHUD(dt);
+  if (vsMode) {
+    const me = kart.finished ? TOTAL_LAPS : playerProgress();
+    const cpu = rival.s / TRACK_LENGTH;
+    const ahead = me >= cpu && !(rival.finished && !kart.finished);
+    document.getElementById('pos-value').innerHTML = `${ahead ? 1 : 2}<small>/2</small>`;
+    const gapM = Math.abs(me - cpu) * TRACK_LENGTH;
+    const gapS = gapM / Math.max(rival.v, 30);
+    document.getElementById('pos-gap').textContent =
+      gameState !== 'racing' ? 'VS CPU' : (ahead ? 'CPU −' : 'CPU +') + gapS.toFixed(2) + 's';
+  }
+
+  // Banner
+  if (bannerTimer > 0) {
+    bannerTimer -= dt;
+    if (bannerTimer <= 0) document.getElementById('banner').style.display = 'none';
+  }
+
+  // Wrong way
+  if (kart.trackDir === -1 && Math.abs(kart.speed) > 5) {
+    wrongWayTimer = 2;
+  }
+  wrongWayTimer -= dt;
+  document.getElementById('wrong-way').style.display = wrongWayTimer > 0 ? 'block' : 'none';
+}
+
+// ── Minimap ───────────────────────────────────────
+function updateMinimap() {
+  const W = 160, H = 120;
+  minimapCtx.clearRect(0,0,W,H);
+
+  // Background
+  minimapCtx.fillStyle = 'rgba(0,0,0,0.0)';
+  minimapCtx.fillRect(0,0,W,H);
+
+  // Compute track bounds
+  const pts = trackCurve.getPoints(80);
+  let mnx = Infinity, mxx = -Infinity, mnz = Infinity, mxz = -Infinity;
+  pts.forEach(p => {
+    mnx = Math.min(mnx, p.x); mxx = Math.max(mxx, p.x);
+    mnz = Math.min(mnz, p.z); mxz = Math.max(mxz, p.z);
+  });
+  const pad = 15;
+  const sx = (W - pad*2) / (mxx - mnx);
+  const sz = (H - pad*2) / (mxz - mnz);
+
+  function toMap(p) {
+    return [pad + (p.x - mnx) * sx, pad + (p.z - mnz) * sz];
+  }
+
+  // Draw track
+  minimapCtx.beginPath();
+  minimapCtx.strokeStyle = 'rgba(255,255,255,0.25)';
+  minimapCtx.lineWidth = 7;
+  minimapCtx.lineCap = 'round';
+  minimapCtx.lineJoin = 'round';
+  pts.forEach((p, i) => {
+    const [x, y] = toMap(p);
+    i === 0 ? minimapCtx.moveTo(x, y) : minimapCtx.lineTo(x, y);
+  });
+  minimapCtx.closePath();
+  minimapCtx.stroke();
+
+  // Track neon line
+  minimapCtx.beginPath();
+  minimapCtx.strokeStyle = '#00f7ff55';
+  minimapCtx.lineWidth = 3;
+  pts.forEach((p, i) => {
+    const [x, y] = toMap(p);
+    i === 0 ? minimapCtx.moveTo(x, y) : minimapCtx.lineTo(x, y);
+  });
+  minimapCtx.closePath();
+  minimapCtx.stroke();
+
+  // other online players
+  if (NET.active && NET.raceOn) for (const r of NET.remotes) {
+    if (r.gone || r.finished) continue;
+    const [rx, ry] = toMap(r.pos);
+    minimapCtx.fillStyle = r.color; minimapCtx.strokeStyle = '#fff'; minimapCtx.lineWidth = 1;
+    minimapCtx.beginPath(); minimapCtx.arc(rx, ry, 3.6, 0, Math.PI * 2); minimapCtx.fill(); minimapCtx.stroke();
+  }
+
+  // Grand Prix dots
+  if (gpMode) {
+    cpus.forEach(c => {
+      const [cx, cy] = toMap(c.pos);
+      minimapCtx.fillStyle = c.color;
+      minimapCtx.beginPath();
+      minimapCtx.arc(cx, cy, 2.8, 0, Math.PI * 2);
+      minimapCtx.fill();
+    });
+  }
+
+  // Rival dot
+  if (vsMode && rival.group) {
+    const [rx, ry] = toMap(rival.pos);
+    minimapCtx.save();
+    minimapCtx.translate(rx, ry);
+    minimapCtx.fillStyle = '#ff00aa';
+    minimapCtx.shadowColor = '#ff00aa';
+    minimapCtx.shadowBlur = 6;
+    minimapCtx.beginPath();
+    minimapCtx.arc(0, 0, 3.5, 0, Math.PI * 2);
+    minimapCtx.fill();
+    minimapCtx.restore();
+  }
+
+  // Kart dot
+  const [kx, ky] = toMap(kart.pos);
+  minimapCtx.save();
+  minimapCtx.translate(kx, ky);
+  minimapCtx.rotate(kart.yaw);
+  minimapCtx.fillStyle = '#ee2222';
+  minimapCtx.shadowColor = '#ff0000';
+  minimapCtx.shadowBlur = 6;
+  minimapCtx.beginPath();
+  minimapCtx.moveTo(0, -5);
+  minimapCtx.lineTo(3, 4);
+  minimapCtx.lineTo(-3, 4);
+  minimapCtx.closePath();
+  minimapCtx.fill();
+  minimapCtx.restore();
+}
+
+// ── Physics Update ────────────────────────────────
+const UP = new THREE.Vector3(0,1,0);
+
+function updateKart(dt) {
+  if (kart.finished || gameState !== 'racing') return;
+
+  const trackInfo = getTrackInfo(kart.pos);
+
+  let acc = keys['KeyW'] || keys['ArrowUp'];
+  let brk = keys['KeyS'] || keys['ArrowDown'];
+  let lft = keys['KeyA'] || keys['ArrowLeft'];
+  let rgt = keys['KeyD'] || keys['ArrowRight'];
+  let driftKey = keys['ShiftLeft'] || keys['ShiftRight'] || keys['Space'];
+  let analogSteer = null;
+  let driftDirInput = lft ? -1 : rgt ? 1 : 0;
+
+  if (kart.boostCooldown > 0) kart.boostCooldown = Math.max(0, kart.boostCooldown - dt);
+
+  if (kart.winMode) {
+    // Win Mode fires the boost whenever it's ready and the next ~80m are fairly straight
+    if (kart.boostCooldown === 0 && kart.speed > 30) {
+      let worst = 0;
+      for (let d = 0; d <= 80; d += 5) worst = Math.max(worst, TRACK_CURV[(trackInfo.idx + Math.round(d / DS)) % NS]);
+      if (worst < 1 / 45) fireBoost();
+    }
+    const wm = getWinModeInput(trackInfo);
+    acc = wm.throttle;
+    brk = wm.brake;
+    analogSteer = wm.steer;
+    lft = rgt = false;
+    driftKey = wm.drift;
+    driftDirInput = wm.driftDir;
+  } else if (kart.autopilot) {
+    const ap = getAutopilotInput(trackInfo.t);
+    acc = ap.throttle;
+    brk = ap.brake;
+    analogSteer = ap.steer;
+    lft = rgt = false;
+    driftKey = false;
+  }
+
+  // Spun out by a mine / orb / storm: no control until it settles
+  const pfx = fx(kart);
+  if (pfx.spin > 0) {
+    acc = brk = lft = rgt = driftKey = false;
+    analogSteer = 0;
+    driftDirInput = 0;
+  }
+
+  // Off-track friction
+  // Off track = sticky and slow (original feel). Press R if you get stuck.
+  // Jetpack: burns fuel while lit, refills while off; airborne karts skip the grass
+  if (kart.jet) {
+    kart.fuel -= dt;
+    if (kart.fuel <= 0) { kart.fuel = 0; kart.jet = false; showBanner('OUT OF FUEL', 1); }
+  } else kart.fuel = Math.min(JET_FUEL, kart.fuel + JET_RECHARGE * dt);
+  const airborne = kart.alt > 0.8;
+  if (kart.jet) { driftKey = false; driftDirInput = 0; }
+  kart.offTrack = !airborne && trackInfo.dist > TRACK_WIDTH/2 + 1;
+  // Friction is expressed "per 60fps frame" and scaled by dt so the kart
+  // behaves identically at 30, 60, 120 or 144 fps.
+  const frictionPerFrame = airborne ? 0.997 : kart.offTrack ? 0.93 : 0.99;
+  const friction = Math.pow(frictionPerFrame, dt * 60);
+  const motorForce = kart.offTrack ? 22 : 60;
+
+  // Acceleration (the jetpack thrusts on its own)
+  if (acc) kart.speed += motorForce * dt;
+  if (kart.jet) kart.speed += 85 * dt;
+  if (brk) {
+    if (kart.speed > 0.5)      kart.speed -= 40 * dt;
+    else if (kart.speed > -8)  kart.speed -= 12 * dt; // reverse
+  }
+
+  // Speed cap
+  let maxFwd = kart.driftBoost > 0 ? MAX_SPEED * 1.25 : MAX_SPEED;
+  if (kart.jet) maxFwd = MAX_SPEED * JET_SPEED;
+  else if (airborne) maxFwd = Math.max(maxFwd, kart.speed);   // coast down from jet speed
+  if (pfx.slow > 0) maxFwd *= 0.65;   // caught in a storm
+  kart.speed = Math.max(-10, Math.min(maxFwd, kart.speed));
+  kart.speed *= friction;
+
+  // Steering
+  const steerMax = STEER_MAX;
+  const steerSpeed = 0.1;
+  const targetSteer = analogSteer !== null ? analogSteer : (lft ? -1 : 0) + (rgt ? 1 : 0);
+  kart.steer += (targetSteer * steerMax - kart.steer) * steerSpeed * 60 * dt;
+  kart.steer = Math.max(-steerMax, Math.min(steerMax, kart.steer));
+
+  // Drift mechanic
+  const isDrifting = driftKey && Math.abs(kart.speed) > 10 && driftDirInput !== 0;
+  if (isDrifting && !kart.isDrifting) {
+    kart.isDrifting = true;
+    kart.driftSide = driftDirInput;
+    kart.driftTime = 0;
+  }
+  if (!driftKey || Math.abs(kart.speed) < 5) {
+    if (kart.isDrifting && kart.driftTime > 0.5) {
+      kart.driftBoost = Math.min(kart.driftTime * 0.6, 2.5); // boost duration
+    }
+    kart.isDrifting = false;
+    kart.driftTime = 0;
+  }
+  if (kart.isDrifting) kart.driftTime += dt;
+
+  // Drift boost decay
+  if (kart.driftBoost > 0) {
+    kart.speed += 15 * dt;
+    kart.driftBoost -= dt;
+  }
+
+  // Yaw rotation
+  // Full steering authority from ~20 m/s so you can turn around at low speed
+  const speedFactor = Math.min(Math.abs(kart.speed) / 20, 1);
+  const driftSteer = kart.isDrifting ? kart.driftSide * steerMax * 1.5 : 0;
+  const totalSteer = kart.steer + driftSteer;
+  kart.yaw -= totalSteer * speedFactor * (kart.speed > 0 ? 1 : -1) * 60 * dt * (airborne ? 1.4 : 1);
+
+  // Update direction
+  kart.dir.set(Math.sin(kart.yaw), 0, Math.cos(kart.yaw));
+
+  // Lateral slide (drifting)
+  const lateralVel = kart.isDrifting ? kart.driftSide * 2 : 0;
+  const right3 = new THREE.Vector3(-kart.dir.z, 0, kart.dir.x);
+
+  // Move
+  kart.pos.addScaledVector(kart.dir, kart.speed * dt);
+  kart.pos.addScaledVector(right3, lateralVel * dt);
+  // climb to cruising height when the jetpack lights, drop back down when it cuts
+  const altTarget = kart.jet ? JET_ALT : 0;
+  kart.alt += (altTarget - kart.alt) * Math.min(1, dt * (kart.jet ? 2.5 : 3.5));
+  if (kart.alt < 0.02) kart.alt = 0;
+  kart.pos.y = kart.alt + (kart.jet ? Math.sin(performance.now() / 180) * 0.12 : 0);
+
+  // Track boundary push-back (soft) — drags you to a near stop at the edge
+  const ti = getTrackInfo(kart.pos);
+  kart.idx = ti.idx; kart.lat = ti.lat;
+  if (airborne && ti.dist > TRACK_WIDTH/2 + 1) {
+    // flying: glance off the edge of the course instead of bogging down
+    const side = Math.sign(ti.lat) || 1, lim = TRACK_WIDTH/2 + 1;
+    kart.pos.x = ti.point.x + ti.right.x * side * lim; kart.pos.z = ti.point.z + ti.right.z * side * lim;
+    const h = kart.dir.dot(ti.tan) >= 0 ? 1 : -1;
+    const want = Math.atan2(ti.tan.x * h - ti.right.x * side * 0.12, ti.tan.z * h - ti.right.z * side * 0.12);
+    let dy = want - kart.yaw; while (dy > Math.PI) dy -= Math.PI * 2; while (dy < -Math.PI) dy += Math.PI * 2;
+    kart.yaw += dy * 0.3; kart.dir.set(Math.sin(kart.yaw), 0, Math.cos(kart.yaw));
+    kart.speed *= Math.pow(0.99, dt * 60);
+  } else if (ti.dist > TRACK_WIDTH/2 + 2.5) {
+    const pushDir = new THREE.Vector3(ti.point.x - kart.pos.x, 0, ti.point.z - kart.pos.z).normalize();
+    kart.pos.addScaledVector(pushDir, (ti.dist - TRACK_WIDTH/2 - 2.5) * 0.3);
+    kart.speed *= Math.pow(0.88, dt * 60);
+  }
+
+  // Lap detection
+  const prevT = kart.lastT;
+  const currT = ti.t;
+
+  // Wrong-way: compare kart facing direction with track tangent at current position
+  // This is robust and works even near t=0/1 wrap-around
+  const dot = kart.dir.dot(ti.tan);
+  kart.trackDir = dot >= 0 ? 1 : -1;
+
+  // Detect crossing finish line (t wraps around 0/1)
+  const crossed = (prevT > 0.9 && currT < 0.1) || (prevT < 0.1 && currT > 0.9);
+  if (crossed) {
+    const forward = (prevT > 0.9 && currT < 0.1);
+    if (forward && !kart.started) {
+      // First crossing from the grid behind the line: the race clock starts here
+      kart.started = true;
+      kart.lapStartTime = performance.now();
+      kart.lapTime = 0;
+    } else if (forward) {
+      // Record lap time
+      const lapT = (performance.now() - kart.lapStartTime) / 1000;
+      if (lapT < kart.bestLap) kart.bestLap = lapT;
+      kart.lapCount++;
+      kart.lapStartTime = performance.now();
+      kart.lapTime = 0;
+      if ((vsMode || gpMode) && kart.lapCount === totalLaps() - 1) recEvent('finalLap');
+
+      // Solo mode is endless practice; VS CPU is a 3-lap race
+      if ((vsMode || gpMode) && kart.lapCount >= totalLaps()) {
+        finishRace();
+        return;
+      }
+    } else if (kart.started) {
+      // Reversed back over the line: undo so progress stays honest
+      if (kart.lapCount > 0) kart.lapCount--;
+      else kart.started = false;
+    }
+  }
+  kart.lastT = currT;
+
+  // Update 3D group
+  if (kartGroup) {
+    kartGroup.position.copy(kart.pos);
+    kartGroup.rotation.y = kart.yaw + spinAngle(kart);
+    animateJetpack(kartGroup, kart.jet, dt);
+
+    // Wheel roll
+    const rollSpeed = kart.speed * dt * 1.5;
+    kartGroup.wheels.forEach((w, i) => {
+      w.rotation.x = (w.rotation.x || 0) - rollSpeed;
+    });
+
+    // Front wheel steer
+    const frontSteer = kart.steer * 20;
+    kartGroup.wheels[0].rotation.y = frontSteer;
+    kartGroup.wheels[1].rotation.y = frontSteer;
+
+    // Body lean in turns
+    kartGroup.rotation.z = -kart.steer * (airborne ? 9 : 5);          // bank harder in the air
+    kartGroup.rotation.x = airborne ? -0.12 : kart.speed > 0 ? -0.04 : 0;
+  }
+
+  // Camera follow
+  if (firstPerson) {
+    // Cockpit: just in front of the driver's helmet, locked to the kart
+    const eye = new THREE.Vector3(), look = new THREE.Vector3();
+    firstPersonPose(eye, look);
+    camState.pos.copy(eye);
+    camState.look.lerp(look, 1 - Math.pow(1 - 0.5, dt * 60));
+  } else {
+    const camDist = 7 + Math.abs(kart.speed) * 0.04;
+    const camHeight = 3.0;
+    const camTarget = new THREE.Vector3(
+      kart.pos.x - kart.dir.x * camDist,
+      kart.pos.y + camHeight,
+      kart.pos.z - kart.dir.z * camDist
+    );
+    // Frame-rate independent smoothing — tighter at jetpack speeds so the camera keeps up
+    const follow = 0.1 + Math.min(0.35, Math.max(0, Math.abs(kart.speed) - MAX_SPEED) / MAX_SPEED * 0.35);
+    camState.pos.lerp(camTarget, 1 - Math.pow(1 - follow, dt * 60));
+    if (camState.pos.distanceTo(camTarget) > 18) camState.pos.lerp(camTarget, 0.5);
+
+    const lookTarget = new THREE.Vector3(
+      kart.pos.x + kart.dir.x * 8,
+      kart.pos.y + 1.2,
+      kart.pos.z + kart.dir.z * 8
+    );
+    camState.look.lerp(lookTarget, 1 - Math.pow(1 - 0.15, dt * 60));
+  }
+
+  // Widen FOV a little with speed for a stronger sense of speed
+  const baseFov = firstPerson ? 78 : 68;
+  const targetFov = baseFov + Math.min(Math.abs(kart.speed) / MAX_SPEED, 2) * 10;
+  camera.fov += (targetFov - camera.fov) * (1 - Math.pow(0.9, dt * 60));
+  camera.updateProjectionMatrix();
+
+  camera.position.copy(camState.pos);
+  camera.lookAt(camState.look);
+
+  // Particles
+  if (kart.jet) jetFlames(kart.pos, kart.dir, kart.alt);
+  document.getElementById('jet-streaks').style.opacity = kart.jet ? Math.min(1, kart.speed / (MAX_SPEED * 1.6)) : 0;
+  if (kart.isDrifting) {
+    const exhaust = kart.pos.clone().addScaledVector(kart.dir, -1.5);
+    exhaust.y += 0.2;
+    const vel = new THREE.Vector3(
+      (Math.random()-0.5)*3,
+      Math.random()*2+1,
+      (Math.random()-0.5)*3
+    );
+    smokeParticles.emit(exhaust, vel, 0.8);
+    driftParticles.emit(exhaust, vel.multiplyScalar(0.5), 0.4);
+  }
+
+  if (kart.driftBoost > 0) {
+    const exhaust = kart.pos.clone().addScaledVector(kart.dir, -1.8);
+    exhaust.y += 0.3;
+    for (let i = 0; i < 3; i++) {
+      const vel = new THREE.Vector3(
+        (Math.random()-0.5)*2,
+        Math.random()*3+1,
+        (Math.random()-0.5)*2
+      );
+      driftParticles.emit(exhaust, vel, 0.5);
+    }
+  }
+}
+
+function fmtTime(t) {
+  return `${Math.floor(t/60).toString().padStart(2,'0')}:${Math.floor(t%60).toString().padStart(2,'0')}.${Math.floor((t%1)*1000).toString().padStart(3,'0')}`;
+}
+
+// ── Mode / reset ──────────────────────────────────
+function updateModeLine() {
+  document.getElementById('mode-line').innerHTML =
+    gpMode ? `MODE: <b>GRAND PRIX</b> · ${GP_CPUS} CPUs · ${GP_LAPS} laps · M = VS CPU · N = SOLO`
+    : vsMode ? 'MODE: <b>VS CPU</b> · 3 laps · M = SOLO · N = GRAND PRIX'
+    : 'MODE: <b>SOLO</b> · M = VS CPU · N = GRAND PRIX';
+  document.getElementById('pos-display').style.display = (vsMode || gpMode) ? 'block' : 'none';
+  document.getElementById('standings').style.display = gpMode ? 'block' : 'none';
+  if (rival.group) rival.group.visible = vsMode;
+  cpus.forEach(c => { c.group.visible = gpMode; });
+}
+
+function setMode(mode) {
+  vsMode = mode === 'vs';
+  gpMode = mode === 'gp';
+  if (gameState === 'menu' || gameState === 'countdown') {
+    history.replaceState(null, '', '#' + stateHash(false, false));
+    placePlayerOnGrid();
+    placeRivalOnGrid();
+    if (gpMode) setupGrandPrix();
+    updateModeLine();
+    if (gpMode) { standingsTimer = 0; updateStandingsHUD(0); }
+  } else {
+    // Mid-race: restart straight into the countdown in the new mode
+    restartRace();
+  }
+}
+
+// Restart on the same track (default) or roll a brand-new one
+function restartRace(newTrack = false) {
+  if (NET.active) { netRestart(newTrack); return; }   // online: the host restarts everyone
+  location.hash = stateHash(true, newTrack);
+  location.reload();
+}
+
+function newTrack() {
+  // From the menu: just show the new track; mid-race: straight into a countdown
+  location.hash = stateHash(gameState !== 'menu', true);
+  location.reload();
+}
+
+function placePlayerOnGrid() {
+  const gridT = 1 - GRID_BACK / TRACK_LENGTH;
+  const p = trackCurve.getPointAt(gridT);
+  const tn = trackCurve.getTangentAt(gridT);
+  const right = new THREE.Vector3(-tn.z, 0, tn.x).normalize();
+  kart.pos.copy(p).addScaledVector(right, vsMode ? GRID_SIDE : 0);
+  kart.pos.y = 0;
+  kart.yaw = Math.atan2(tn.x, tn.z);
+  kart.dir.set(tn.x, 0, tn.z).normalize();
+  if (gpMode) {
+    const g = gridSlot(PLAYER_GP_SLOT);
+    kart.pos.copy(g.pos);
+    kart.yaw = g.yaw;
+    kart.dir.set(Math.sin(g.yaw), 0, Math.cos(g.yaw));
+  }
+  const tiG = getTrackInfo(kart.pos);
+  kart.idx = tiG.idx; kart.lat = tiG.lat;
+  kart.speed = 0;
+  kart.lastT = getTrackInfo(kart.pos).t;
+  if (kartGroup) {
+    kartGroup.position.copy(kart.pos);
+    kartGroup.rotation.set(0, kart.yaw, 0);
+  }
+}
+
+// Drop the kart back onto the centre line, facing the right way
+function resetToTrack() {
+  const ti = getTrackInfo(kart.pos);
+  kart.pos.set(ti.point.x, 0, ti.point.z);
+  kart.yaw = Math.atan2(ti.tan.x, ti.tan.z);
+  kart.dir.set(ti.tan.x, 0, ti.tan.z);
+  kart.speed = 0;
+  kart.steer = 0;
+  kart.isDrifting = false;
+  kart.driftBoost = 0;
+  fx(kart).spin = 0;
+  showBanner('RESET', 0.8);
+}
+
+// ── Finish ────────────────────────────────────────
+function finishRace() {
+  kart.finished = true;
+  gameState = 'finished';
+
+  const total = kart.totalTime;
+  const tm = Math.floor(total/60).toString().padStart(2,'0');
+  const ts = Math.floor(total%60).toString().padStart(2,'0');
+  const tms= Math.floor((total%1)*1000).toString().padStart(3,'0');
+
+  let bestStr = '—';
+  if (kart.bestLap < Infinity) {
+    const b = kart.bestLap;
+    bestStr = `${Math.floor(b/60).toString().padStart(2,'0')}:${Math.floor(b%60).toString().padStart(2,'0')}.${Math.floor((b%1)*1000).toString().padStart(3,'0')}`;
+  }
+
+  const h1 = document.querySelector('#finish-overlay h1');
+  if (gpMode) {
+    const rows = gpStandings();
+    const myPos = rows.findIndex(r => r.me) + 1;
+    const suffix = ['ST', 'ND', 'RD'][myPos - 1] || 'TH';
+    h1.textContent = myPos === 1 ? '🏆 GRAND PRIX WINNER!' : `${myPos <= 3 ? '🏅' : '🏁'} ${myPos}${suffix} PLACE`;
+    const table = rows.map((r, i) => {
+      const res = r.finished ? fmtTime(r.time) : `${(GP_LAPS - r.prog).toFixed(2)} laps behind`;
+      return `<tr class="${r.me ? 'me' : ''}"><td>${i + 1}.</td><td style="color:${r.color}">●</td><td>${r.name}</td><td>${res}</td></tr>`;
+    }).join('');
+    document.getElementById('finish-stats').innerHTML =
+      `Best Lap: <b>${bestStr}</b><table id="results">${table}</table>`;
+  } else if (vsMode) {
+    const won = !rival.finished;
+    h1.textContent = won ? '🏆 YOU WIN!' : '🥈 2ND PLACE';
+    const cpuLine = won
+      ? `CPU: <b>${(TOTAL_LAPS - Math.max(rival.s, 0) / TRACK_LENGTH).toFixed(2)} laps behind</b>`
+      : `CPU Time: <b>${fmtTime(rival.finishTime)}</b> (you were +${(total - rival.finishTime).toFixed(2)}s)`;
+    document.getElementById('finish-stats').innerHTML =
+      `Your Time: <b>${tm}:${ts}.${tms}</b><br>${cpuLine}<br>Best Lap: <b>${bestStr}</b>`;
+  } else {
+    h1.textContent = '🏆 FINISH!';
+    document.getElementById('finish-stats').innerHTML =
+      `Total Time: <b>${tm}:${ts}.${tms}</b><br>Best Lap: <b>${bestStr}</b><br>Laps: <b>${TOTAL_LAPS}</b>`;
+  }
+
+  const fo = document.getElementById('finish-overlay');
+  fo.style.display = 'flex';
+
+  // online: keep the results table live as other players cross the line
+  if (NET.active && gpMode) {
+    clearInterval(finishRace.refresh);
+    finishRace.refresh = setInterval(() => {
+      const rows = gpStandings();
+      const table = rows.map((r, i) => {
+        const res = r.finished ? fmtTime(r.time) : `racing… ${(GP_LAPS - r.prog).toFixed(2)} laps to go`;
+        return `<tr class="${r.me ? 'me' : ''}"><td>${i + 1}.</td><td style="color:${r.color}">●</td><td>${escapeHtml(r.name)}</td><td>${res}</td></tr>`;
+      }).join('');
+      document.getElementById('finish-stats').innerHTML = `Best Lap: <b>${bestStr}</b><table id="results">${table}</table>`;
+    }, 1000);
+  }
+
+  // roll the highlight reel behind the results
+  replay.finishCaption = '🏁 ' + h1.textContent.replace(/^[^A-Z0-9]+/, '');
+  startHighlights();
+}
+
+// ── Countdown cinematic camera ────────────────────
+// Four shots, one per countdown beat: 3 → 2 → 1 → GO (blend into chase cam)
+let cinematicStart = 0;
+const CINE = { pos: new THREE.Vector3(), look: new THREE.Vector3(), fov: 55 };
+
+function kartFrame() {
+  const fwd = kart.dir.clone();
+  const side = new THREE.Vector3(-fwd.z, 0, fwd.x);
+  return { p: kart.pos, fwd, side };
+}
+
+let firstPerson = false;
+
+function firstPersonPose(outPos, outLook) {
+  const p = kart.pos, f = kart.dir;
+  outPos.set(p.x + f.x * 0.45, p.y + 1.5, p.z + f.z * 0.45);
+  outLook.set(p.x + f.x * 20, 0.9, p.z + f.z * 20);
+}
+
+function chaseCamPose(outPos, outLook) {
+  if (firstPerson) { firstPersonPose(outPos, outLook); return; }
+  const { p, fwd } = kartFrame();
+  outPos.set(p.x - fwd.x * 7, p.y + 3.0, p.z - fwd.z * 7);
+  outLook.set(p.x + fwd.x * 8, p.y + 1.2, p.z + fwd.z * 8);
+}
+
+function cinematicShot(shot, s, outPos, outLook) {
+  const { p, fwd, side } = kartFrame();
+  const e = s * s * (3 - 2 * s); // smoothstep
+  outPos.copy(p); outLook.copy(p);
+  if (shot === 0) {
+    // Low front shot past the start line, sliding sideways across the nose
+    outPos.addScaledVector(fwd, 6).addScaledVector(side, -4 + e * 8);
+    outPos.y = 0.7;
+    outLook.y = 0.7;
+    CINE.fov = 50;
+  } else if (shot === 1) {
+    // Wide orbit around the kart from the side
+    const a = -Math.PI * 0.35 + e * Math.PI * 0.7;
+    outPos.addScaledVector(side, Math.cos(a) * 8).addScaledVector(fwd, Math.sin(a) * 8);
+    outPos.y = 1.8 + e * 0.8;
+    outLook.y = 0.8;
+    CINE.fov = 55;
+  } else {
+    // High crane over the start/finish line, dropping down behind the kart
+    const startPt = trackCurve.getPoint(0);
+    outPos.copy(startPt).addScaledVector(fwd, 10 - e * 14).addScaledVector(side, 6 - e * 4);
+    outPos.y = 22 - e * 10;
+    outLook.copy(p).lerp(startPt, 0.5);
+    outLook.y = 0;
+    CINE.fov = 60;
+  }
+}
+
+function updateCinematic() {
+  const t = (performance.now() - cinematicStart) / 1000;
+  const shot = Math.min(Math.floor(t), 3);
+  const s = Math.min(t - shot, 1);
+
+  if (shot < 3) {
+    cinematicShot(shot, s, CINE.pos, CINE.look);
+  } else {
+    // "GO!" — sweep from the end of the crane shot into the chase position
+    const fromPos = new THREE.Vector3(), fromLook = new THREE.Vector3();
+    const toPos = new THREE.Vector3(), toLook = new THREE.Vector3();
+    cinematicShot(2, 1, fromPos, fromLook);
+    chaseCamPose(toPos, toLook);
+    const k = Math.min((t - 3) / 0.7, 1);
+    const e = 1 - Math.pow(1 - k, 3); // ease-out
+    CINE.pos.lerpVectors(fromPos, toPos, e);
+    CINE.look.lerpVectors(fromLook, toLook, e);
+    CINE.fov = 60 + (68 - 60) * e;
+  }
+
+  camState.pos.copy(CINE.pos);
+  camState.look.copy(CINE.look);
+  camera.fov = CINE.fov;
+  camera.updateProjectionMatrix();
+  camera.position.copy(CINE.pos);
+  camera.lookAt(CINE.look);
+}
+
+// ── Countdown & Start ─────────────────────────────
+function startCountdown() {
+  document.getElementById('start-overlay').classList.add('fade-out');
+  gameState = 'countdown';
+  cinematicStart = performance.now();
+
+  const cdEl = document.getElementById('countdown');
+  const cdText = document.getElementById('countdown-text');
+  cdEl.style.display = 'flex';
+
+  let count = 3;
+  function tick() {
+    cdText.textContent = count;
+    cdText.style.animation = 'none';
+    cdText.offsetHeight; // reflow
+    cdText.style.animation = 'countdown-pop 0.6s ease-out';
+
+    if (count <= 0) {
+      cdText.textContent = 'GO!';
+      cdText.style.animation = 'none';
+      cdText.offsetHeight;
+      cdText.style.animation = 'countdown-pop 0.6s ease-out';
+      setTimeout(() => {
+        cdEl.style.display = 'none';
+        gameState = 'racing';
+        kart.lapStartTime = performance.now();
+      }, 700);
+      return;
+    }
+    count--;
+    setTimeout(tick, 1000);
+  }
+  tick();
+}
+
+// ── Init ──────────────────────────────────────────
+function init() {
+  buildTrack();
+  buildScenery();
+  buildLighting();
+  buildItemCubes();
+
+  kartGroup = buildKart();
+  scene.add(kartGroup);
+
+  smokeParticles  = new ParticleSystem(200, 0xaaaaaa);
+  driftParticles  = new ParticleSystem(150, 0xff8800);
+
+  // CPU rival kart (hidden in solo mode)
+  rival.group = buildKart({ body: 0x7a1cff, bodyEmissive: 0x1a0040, glow: 0xff00aa });
+  scene.add(rival.group);
+
+  // Karts sit on the grid a few metres BEHIND the start/finish line
+  placePlayerOnGrid();
+  placeRivalOnGrid();
+  if (gpMode) setupGrandPrix();
+  updateModeLine();
+
+  chaseCamPose(camState.pos, camState.look);
+  camera.position.copy(camState.pos);
+  camera.lookAt(camState.look);
+
+  // Buttons
+  document.getElementById('start-btn').addEventListener('click', startCountdown);
+  document.getElementById('restart-btn').addEventListener('click', () => restartRace(false));
+  document.getElementById('newtrack-btn').addEventListener('click', () => restartRace(true));
+  document.getElementById('track-line').textContent =
+    `TRACK #${TRACK_SEED} · ${Math.round(TRACK_LENGTH)} m` + (generatedTrack ? '' : ' (classic)');
+  history.replaceState(null, '', '#' + stateHash(location.hash.includes('-go'), false));
+
+  // Controls toggle
+  document.getElementById('controls-toggle').addEventListener('click', () => {
+    const body = document.getElementById('controls-body');
+    const toggle = document.getElementById('controls-toggle');
+    const hidden = body.classList.toggle('hidden');
+    toggle.textContent = hidden ? '▼ SHOW CONTROLS' : '▲ HIDE CONTROLS';
+  }, { passive: true });
+
+  // Arrived via restart / mode switch: skip the menu
+  if (location.hash.includes('-go')) {
+    history.replaceState(null, '', '#' + stateHash(false, false));
+    document.getElementById('start-overlay').style.transition = 'none';
+    startCountdown();
+  }
+
+  animate();
+}
+
+// ── Pause ─────────────────────────────────────────
+let paused = false;
+let pauseStartedAt = 0;
+function togglePause() {
+  if (NET.active) return;            // the race carries on for everyone else
+  if (!paused && gameState !== 'racing') return;   // only mid-race
+  paused = !paused;
+  document.getElementById('pause-overlay').classList.toggle('show', paused);
+  if (paused) {
+    pauseStartedAt = performance.now();
+  } else {
+    // Don't let the paused time count toward the lap timer
+    kart.lapStartTime += performance.now() - pauseStartedAt;
+  }
+}
+// Auto-pause when the tab is hidden
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden && !paused && gameState === 'racing') togglePause();
+});
+document.getElementById('resume-btn').addEventListener('click', togglePause);
+document.getElementById('pause-restart-btn').addEventListener('click', () => restartRace(false));
+document.getElementById('pause-newtrack-btn').addEventListener('click', () => restartRace(true));
+
+
+// ══════════════════════════════════════════════════
+//  Race recorder + post-race highlight reel
+//  While racing: every kart's position is sampled 20× a second and
+//  notable moments (overtakes, hits, battles, wipeouts, final lap…) are
+//  logged. After the finish, the best moments loop behind the results
+//  as a TV-style reel with broadcast cameras, slow-mo and captions.
+// ══════════════════════════════════════════════════
+const REC_HZ = 20, REC_DT = 1 / REC_HZ;
+const replay = {
+  frames: [],          // { t, k: Float32Array(n*5), fx: number[] }
+  events: [],          // { t, type, ... }
+  karts: null,         // fixed racer list for this race
+  t: 0, acc: 0,
+  // detection state
+  checkT: 0, lastOrder: null, battleT: 0, battleWith: null, lastBattle: -99, wasOff: false,
+  // playback
+  playing: false, clips: [], clipIdx: 0, rt: 0, clipT: 0, camPos: new THREE.Vector3(), camLook: new THREE.Vector3(),
+  tvCam: new THREE.Vector3(), firedHits: new Set(), pool: { mines: [], orbs: [] }, shields: [],
+};
+
+function recEvent(type, data = {}) {
+  if (gameState !== 'racing' || !replay.karts) return;
+  replay.events.push(Object.assign({ t: replay.t, type, lap: kart.lapCount + 1 }, data));
+}
+function kartIndex(o) { return replay.karts ? replay.karts.findIndex(r => r.o === o) : -1; }
+
+function recordReplayFrame(dt) {
+  if (gameState !== 'racing') return;
+  if (!replay.karts) replay.karts = racers().map(r => ({ o: r.o, kind: r.kind, name: r.name, group: r.group }));
+  replay.t += dt;
+  replay.acc += dt;
+  if (replay.acc >= REC_DT) {
+    replay.acc -= REC_DT;
+    const n = replay.karts.length, k = new Float32Array(n * 6);
+    replay.karts.forEach((r, i) => {
+      const g = r.group, f = r.o.fx;
+      const boosting = r.kind === 'player' ? kart.driftBoost > 0 : (f && f.nitro > 0);
+      const jet = g.jetpack ? g.jetpack.amount > 0.5 : false;
+      const flags = (boosting ? 1 : 0) | (f && f.shield > 0 ? 2 : 0) | (jet ? 4 : 0);
+      k[i * 6] = g.position.x; k[i * 6 + 1] = g.position.z; k[i * 6 + 2] = g.rotation.y; k[i * 6 + 3] = g.rotation.z; k[i * 6 + 4] = flags; k[i * 6 + 5] = g.position.y;
+    });
+    const fxl = [];
+    for (const m of mines) fxl.push(0, m.pos.x, m.pos.z);
+    for (const o of orbs) fxl.push(1, o.mesh.position.x, o.mesh.position.z);
+    replay.frames.push({ t: replay.t, k, fx: fxl });
+  }
+
+  // every 0.25 s: overtakes, side-by-side battles, wipeouts
+  replay.checkT -= dt;
+  if (replay.checkT > 0) return;
+  replay.checkT = 0.25;
+  const list = racers();
+  const order = list.slice().sort((a, b) => b.p - a.p).map(r => r.o);
+  if (replay.lastOrder && replay.t > 3) {
+    const before = new Map(replay.lastOrder.map((o, i) => [o, i]));
+    order.forEach((o, i) => {
+      const was = before.get(o);
+      if (was === undefined || was <= i) return;
+      // o moved up: everyone it jumped past
+      for (let j = i + 1; j < order.length; j++) {
+        const other = order[j];
+        if (before.get(other) < was) {
+          const a = list.find(r => r.o === o), b = list.find(r => r.o === other);
+          recEvent('pass', { who: kartIndex(o), victim: kartIndex(other), whoName: a.name, victimName: b.name });
+        }
+      }
+    });
+  }
+  replay.lastOrder = order;
+  // battle: someone within 3.5 m of the player for 2 s
+  const me = list[0];
+  let near = null;
+  for (const r of list) if (r.o !== kart && Math.hypot(r.pos.x - me.pos.x, r.pos.z - me.pos.z) < 3.5) near = r;
+  if (near && near.o === replay.battleWith) {
+    replay.battleT += 0.25;
+    if (replay.battleT >= 2 && replay.t - replay.lastBattle > 8) {
+      replay.lastBattle = replay.t;
+      recEvent('battle', { who: 0, victim: kartIndex(near.o), victimName: near.name });
+    }
+  } else { replay.battleWith = near ? near.o : null; replay.battleT = 0; }
+  // wipeout: running off the track at speed
+  if (kart.offTrack && !replay.wasOff && kart.speed > 25) recEvent('wipeout', { who: 0 });
+  replay.wasOff = kart.offTrack;
+}
+
+// ── Choosing the highlights ──
+const HL_SCORE = { finish: 1000, start: 500, hitPlayer: 60, hitByPlayer: 55, block: 45, pass: 40, passed: 30,
+  finalLap: 35, battle: 25, wipeout: 22, storm: 30, hitCpu: 14, boost: 8, passCpu: 5, jet: 28 };
+function buildHighlights() {
+  const end = replay.frames.length ? replay.frames[replay.frames.length - 1].t : 0;
+  const c = [];
+  const add = (t, score, pre, post, data) => c.push(Object.assign({ t, score, from: Math.max(0.05, t - pre), to: Math.min(end, t + post) }, data));
+  add(0.3, HL_SCORE.start, 0, 5, { kind: 'start', focus: 0, caption: '🚦 LIGHTS OUT — RACE START' });
+  for (const e of replay.events) {
+    const lapTxt = ` · LAP ${Math.min(e.lap, totalLaps())}`;
+    if (e.type === 'pass') {
+      if (e.who === 0) add(e.t, HL_SCORE.pass, 2.6, 2, { kind: 'pass', focus: 0, other: e.victim, caption: `⬆ YOU PASS ${e.victimName}${lapTxt}` });
+      else if (e.victim === 0) add(e.t, HL_SCORE.passed, 2.6, 2, { kind: 'pass', focus: e.who, other: 0, caption: `⬇ ${e.whoName} GETS BY YOU${lapTxt}` });
+      else add(e.t, HL_SCORE.passCpu, 2.4, 1.8, { kind: 'pass', focus: e.who, other: e.victim, caption: `${e.whoName} PASSES ${e.victimName}${lapTxt}` });
+    } else if (e.type === 'hit') {
+      const verb = { mine: 'MINE', orb: 'HOMING ORB', storm: 'STORM' }[e.item] || 'HIT';
+      if (e.item === 'storm') { if (e.victim === 0 || e.by === 0) add(e.t, HL_SCORE.storm, 1.5, 2.2, { kind: 'hit', focus: e.victim, slow: true, caption: e.by === 0 ? `🌩️ YOUR STORM ZAPS ${e.victimName}` : `🌩️ STORM HITS YOU${lapTxt}` }); continue; }
+      if (e.victim === 0) add(e.t, HL_SCORE.hitPlayer, 2.2, 2.4, { kind: 'hit', focus: 0, slow: true, caption: `💥 ${e.byName ? e.byName + '’S ' : ''}${verb} GETS YOU${lapTxt}` });
+      else if (e.by === 0) add(e.t, HL_SCORE.hitByPlayer, 2.2, 2.4, { kind: 'hit', focus: e.victim, slow: true, caption: `💥 YOUR ${verb} TAKES OUT ${e.victimName}${lapTxt}` });
+      else add(e.t, HL_SCORE.hitCpu, 2, 2.2, { kind: 'hit', focus: e.victim, slow: true, caption: `💥 ${e.victimName} SPINS OUT${lapTxt}` });
+    } else if (e.type === 'block') {
+      if (e.victim === 0 || e.by === 0) add(e.t, HL_SCORE.block, 2, 1.8, { kind: 'hit', focus: e.victim, slow: true, caption: e.victim === 0 ? '🛡️ SHIELD SAVES YOU' : `🛡️ ${e.victimName}’S SHIELD BLOCKS YOU` });
+    } else if (e.type === 'battle') add(e.t, HL_SCORE.battle, 2.8, 1.6, { kind: 'battle', focus: 0, other: e.victim, caption: `⚔️ WHEEL TO WHEEL WITH ${e.victimName}${lapTxt}` });
+    else if (e.type === 'wipeout') add(e.t, HL_SCORE.wipeout, 1.6, 2.2, { kind: 'wipeout', focus: 0, caption: `😵 OFF THE TRACK${lapTxt}` });
+    else if (e.type === 'finalLap') add(e.t, HL_SCORE.finalLap, 0.4, 4, { kind: 'lap', focus: 0, caption: '🏁 FINAL LAP' });
+    else if (e.type === 'boost') add(e.t, HL_SCORE.boost, 0.6, 3, { kind: 'boost', focus: 0, caption: `🚀 BOOST${lapTxt}` });
+    else if (e.type === 'jet') add(e.t, HL_SCORE.jet, 0.5, 4, { kind: 'jet', focus: 0, caption: `🔥 JETPACK!${lapTxt}` });
+  }
+  add(end, HL_SCORE.finish, 4.5, 0, { kind: 'finish', focus: 0, caption: replay.finishCaption || '🏁 CHEQUERED FLAG' });
+
+  // best moments that don't overlap, then back into race order
+  c.sort((a, b) => b.score - a.score);
+  const picked = [];
+  for (const cl of c) {
+    if (picked.length >= 8) break;
+    if (cl.to - cl.from < 1) continue;
+    if (picked.some(p => cl.from < p.to + 0.5 && cl.to > p.from - 0.5)) continue;
+    picked.push(cl);
+  }
+  picked.sort((a, b) => a.from - b.from);
+  return picked;
+}
+
+// ── Playback ──
+function sampleFrame(t) {
+  const F = replay.frames;
+  if (!F.length) return null;
+  let i = Math.floor(t * REC_HZ) - 1;
+  i = Math.max(0, Math.min(F.length - 2, i));
+  while (i < F.length - 2 && F[i + 1].t < t) i++;
+  while (i > 0 && F[i].t > t) i--;
+  const a = F[i], b = F[Math.min(F.length - 1, i + 1)];
+  const u = b.t > a.t ? Math.max(0, Math.min(1, (t - a.t) / (b.t - a.t))) : 0;
+  return { a, b, u };
+}
+function lerpAngle(a, b, u) { let d = b - a; while (d > Math.PI) d -= Math.PI * 2; while (d < -Math.PI) d += Math.PI * 2; return a + d * u; }
+function kartAt(s, i) {
+  const A = s.a.k, B = s.b.k, u = s.u, o = i * 6;
+  return { x: A[o] + (B[o] - A[o]) * u, z: A[o + 1] + (B[o + 1] - A[o + 1]) * u,
+           yaw: lerpAngle(A[o + 2], B[o + 2], u), roll: A[o + 3] + (B[o + 3] - A[o + 3]) * u, flags: A[o + 4],
+           y: A[o + 5] + (B[o + 5] - A[o + 5]) * u };
+}
+function makeFxMesh(type) {
+  const g = new THREE.Group();
+  if (type === 0) {
+    g.add(new THREE.Mesh(new THREE.SphereGeometry(0.55, 14, 10),
+      new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.7, roughness: 0.3, emissive: 0xff0033, emissiveIntensity: 0.8 })));
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(0.85, 0.08, 6, 24), new THREE.MeshBasicMaterial({ color: 0xff2255 }));
+    ring.rotation.x = Math.PI / 2; g.add(ring);
+  } else {
+    g.add(new THREE.Mesh(new THREE.SphereGeometry(0.45, 14, 10), new THREE.MeshStandardMaterial({ color: 0xff66ff, emissive: 0xff00ff, emissiveIntensity: 2 })));
+    g.add(new THREE.Mesh(new THREE.SphereGeometry(0.9, 14, 10), new THREE.MeshBasicMaterial({ color: 0xff44ff, transparent: true, opacity: 0.3, blending: THREE.AdditiveBlending, depthWrite: false })));
+  }
+  g.visible = false; scene.add(g);
+  return g;
+}
+
+function startHighlights() {
+  if (!replay.frames.length || replay.frames.length < REC_HZ * 3) return;
+  replay.clips = buildHighlights();
+  if (!replay.clips.length) return;
+  // live items off the stage; the replay draws its own
+  for (const m of mines) m.mesh.visible = false;
+  for (const o of orbs) o.mesh.visible = false;
+  replay.karts.forEach(r => {
+    r.group.visible = !r.o.gone;
+    const f = r.o.fx; if (f && f.shieldMesh) f.shieldMesh.visible = false;
+    const sh = new THREE.Mesh(new THREE.SphereGeometry(2.1, 20, 14), new THREE.MeshBasicMaterial({ color: 0x00f7ff, transparent: true, opacity: 0.22, blending: THREE.AdditiveBlending, depthWrite: false }));
+    sh.position.y = 0.8; sh.visible = false; r.group.add(sh); replay.shields.push(sh);
+  });
+  replay.playing = true;
+  document.body.classList.add('replaying');
+  document.getElementById('finish-overlay').classList.add('replay');
+  beginClip(0);
+}
+
+const CAM_BY_KIND = { start: ['heli', 'tv'], pass: ['tv', 'heli', 'side'], hit: ['orbit', 'tv'], battle: ['side', 'tv', 'chase'],
+  wipeout: ['tv', 'orbit'], lap: ['chase', 'heli'], boost: ['chase', 'low'], finish: ['low', 'chase'], jet: ['side', 'heli', 'chase'] };
+// put the trackside camera a little up the road from (x, z)
+function placeTvCam(x, z, side) {
+  const ti = getTrackInfo(new THREE.Vector3(x, 0, z));
+  const ahead = (ti.idx + Math.round(32 / DS)) % NS;
+  replay.tvCam.set(S_PT[ahead].x + S_RIGHT[ahead].x * side * (TRACK_WIDTH / 2 + 6), 5.5,
+                   S_PT[ahead].z + S_RIGHT[ahead].z * side * (TRACK_WIDTH / 2 + 6));   // above the barriers
+  replay.tvSide = side; replay.tvPlacedAt = replay.rt;
+}
+let replayLoop = 0;
+function beginClip(i) {
+  replay.clipIdx = i % replay.clips.length;
+  if (replay.clipIdx === 0 && i > 0) replayLoop++;
+  const c = replay.clips[replay.clipIdx];
+  const opts = CAM_BY_KIND[c.kind] || ['tv'];
+  c.cam = opts[(replay.clipIdx + replayLoop) % opts.length];
+  replay.rt = c.from;
+  replay.firedHits.clear();
+  replay.camInit = false;
+  // a trackside camera a little up the road from the action
+  const s = sampleFrame(c.from), f = kartAt(s, c.focus);
+  placeTvCam(f.x, f.z, replay.clipIdx % 2 ? 1 : -1);
+  // captions + cut flash
+  document.getElementById('replay-caption').textContent = c.caption;
+  document.getElementById('replay-count').textContent = `HIGHLIGHTS ${replay.clipIdx + 1}/${replay.clips.length}`;
+  const cut = document.getElementById('replay-cut');
+  cut.style.transition = 'none'; cut.style.opacity = 1;
+  requestAnimationFrame(() => { cut.style.transition = 'opacity 0.35s'; cut.style.opacity = 0; });
+}
+
+function updateReplay(dt) {
+  if (!replay.playing) return;
+  const c = replay.clips[replay.clipIdx];
+  // slow motion around the big moment
+  const nearEvent = c.slow && Math.abs(replay.rt - c.t) < 0.8;
+  const rate = nearEvent ? 0.35 : 1;
+  document.getElementById('replay-slowmo').style.opacity = nearEvent ? 1 : 0;
+  replay.rt += dt * rate;
+  if (replay.rt >= c.to) { beginClip(replay.clipIdx + 1); return; }
+
+  const s = sampleFrame(replay.rt);
+  // karts
+  replay.karts.forEach((r, i) => {
+    const k = kartAt(s, i), g = r.group;
+    const px = g.position.x, pz = g.position.z;
+    g.position.set(k.x, k.y, k.z); g.rotation.set(-0.04, k.yaw, k.roll);
+    if ((k.flags & 4) || g.jetpack) animateJetpack(g, !!(k.flags & 4), dt);
+    if (k.flags & 4) jetFlames(new THREE.Vector3(k.x, 0, k.z), new THREE.Vector3(Math.sin(k.yaw), 0, Math.cos(k.yaw)), k.y);
+    const moved = Math.hypot(k.x - px, k.z - pz);
+    if (g.wheels) g.wheels.forEach(w => { w.rotation.x -= moved * 2.5; });
+    replay.shields[i].visible = !!(k.flags & 2);
+    if ((k.flags & 1) && Math.random() < 0.8) {
+      const p = new THREE.Vector3(k.x - Math.sin(k.yaw) * 1.8, 0.3, k.z - Math.cos(k.yaw) * 1.8);
+      driftParticles.emit(p, new THREE.Vector3((Math.random() - 0.5) * 2, Math.random() * 3 + 1, (Math.random() - 0.5) * 2), 0.4);
+    }
+  });
+  // mines / orbs as they were
+  const fxl = s.a.fx; let mi = 0, oi = 0;
+  for (let j = 0; j < fxl.length; j += 3) {
+    const type = fxl[j], pool = type === 0 ? replay.pool.mines : replay.pool.orbs;
+    const idx = type === 0 ? mi++ : oi++;
+    if (!pool[idx]) pool[idx] = makeFxMesh(type);
+    pool[idx].visible = true;
+    pool[idx].position.set(fxl[j + 1], type === 0 ? 0.55 : 1, fxl[j + 2]);
+    pool[idx].rotation.y += dt * 2;
+  }
+  for (let j = mi; j < replay.pool.mines.length; j++) replay.pool.mines[j].visible = false;
+  for (let j = oi; j < replay.pool.orbs.length; j++) replay.pool.orbs[j].visible = false;
+  // explosions when the replay reaches a hit
+  for (const e of replay.events) {
+    if ((e.type === 'hit' || e.type === 'block') && e.t <= replay.rt && e.t > replay.rt - 0.3 && !replay.firedHits.has(e)) {
+      replay.firedHits.add(e);
+      const k = kartAt(s, Math.max(0, e.victim));
+      for (let n = 0; n < 26; n++) driftParticles.emit(new THREE.Vector3(k.x, 1, k.z), new THREE.Vector3((Math.random() - 0.5) * 12, Math.random() * 7 + 2, (Math.random() - 0.5) * 12), 0.7);
+    }
+  }
+  directReplayCamera(dt, s, c);
+}
+
+function directReplayCamera(dt, s, c) {
+  const f = kartAt(s, c.focus);
+  const dir = new THREE.Vector3(Math.sin(f.yaw), 0, Math.cos(f.yaw));
+  const right = new THREE.Vector3(-dir.z, 0, dir.x);
+  const focus = new THREE.Vector3(f.x, 0.9, f.z);
+  // frame the rival too when there is one
+  if (c.other != null && c.other >= 0) {
+    const o = kartAt(s, c.other);
+    if (Math.hypot(o.x - f.x, o.z - f.z) < 25) focus.set((f.x * 2 + o.x) / 3, 0.9, (f.z * 2 + o.z) / 3);
+  }
+  const target = new THREE.Vector3();
+  let fov = 55, smooth = 0.12;
+  const age = replay.rt - c.from;
+  switch (c.cam) {
+    case 'tv': {
+      // once the action has gone past, cut to the next trackside camera
+      if (focus.distanceTo(replay.tvCam) > 60 && replay.rt - replay.tvPlacedAt > 1) {
+        placeTvCam(f.x, f.z, -replay.tvSide);
+        replay.camPos.copy(replay.tvCam);
+        const cut = document.getElementById('replay-cut');
+        cut.style.transition = 'none'; cut.style.opacity = 0.6;
+        requestAnimationFrame(() => { cut.style.transition = 'opacity 0.3s'; cut.style.opacity = 0; });
+      }
+      target.copy(replay.tvCam);
+      const dist = target.distanceTo(focus);
+      fov = THREE.MathUtils.clamp(2 * Math.atan(9 / dist) * 180 / Math.PI, 14, 55);   // broadcast zoom
+      smooth = 1;
+      break;
+    }
+    case 'heli':
+      target.copy(focus).addScaledVector(dir, -14).addScaledVector(right, 6); target.y = 16; fov = 50; break;
+    case 'orbit': {
+      const a = age * 0.6;
+      target.set(focus.x + Math.cos(a) * 9, 3.2, focus.z + Math.sin(a) * 9); fov = 50; smooth = 0.25; break;
+    }
+    case 'side':
+      target.copy(focus).addScaledVector(right, 7).addScaledVector(dir, 1.5); target.y = 1.6; fov = 48; break;
+    case 'low':
+      target.copy(focus).addScaledVector(dir, 6).addScaledVector(right, -2.4); target.y = 0.55; fov = 62; smooth = 0.2; break;
+    default:   // chase
+      target.copy(focus).addScaledVector(dir, -6.5); target.y = 2.4; fov = 62; break;
+  }
+  if (!replay.camInit) { replay.camPos.copy(target); replay.camLook.copy(focus); replay.camInit = true; }
+  replay.camPos.lerp(target, 1 - Math.pow(1 - smooth, dt * 60));
+  replay.camLook.lerp(focus, 1 - Math.pow(0.75, dt * 60));
+  camera.fov += (fov - camera.fov) * Math.min(1, dt * 6);
+  camera.updateProjectionMatrix();
+  camera.position.copy(replay.camPos);
+  camera.lookAt(replay.camLook);
+}
+
+
+// ══════════════════════════════════════════════════
+//  ONLINE MULTIPLAYER — peer-to-peer with PeerJS
+//  One player hosts and gets a 5-letter room code; friends join with it.
+//  The PeerJS server only introduces the browsers; the game data then flows
+//  directly between them. The host is the hub: it runs the CPU karts, relays
+//  everyone's kart positions 20× a second and passes item events along.
+//  Whoever gets hit decides the hit (their game knows where they really are).
+// ══════════════════════════════════════════════════
+const NET = {
+  active: false, isHost: false, code: null, peer: null, myId: null, name: '',
+  conns: new Map(),        // host: peerId → connection
+  hostConn: null,          // client: connection to the host
+  lobby: [],               // [{ id, name, color }]
+  settings: { mode: 'gp', laps: 3 },
+  remotes: [],             // other humans' karts during a race
+  raceOn: false, leaving: false, sendAcc: 0, projSeq: 0, joinTimer: null,
+};
+const NET_MAX_PLAYERS = 8;
+const NET_INTERP_MS = 110;   // draw other karts this far in the past so movement stays smooth
+const HUMAN_COLORS = [
+  { body: 0xee2222, glow: 0x00f7ff, css: '#ee2222' }, { body: 0x1e7bff, glow: 0x00e5ff, css: '#1e7bff' },
+  { body: 0xffc400, glow: 0xffee00, css: '#ffc400' }, { body: 0x1fcf5a, glow: 0x39ff14, css: '#1fcf5a' },
+  { body: 0xff4fb4, glow: 0xff00aa, css: '#ff4fb4' }, { body: 0xff7a1a, glow: 0xff3300, css: '#ff7a1a' },
+  { body: 0x9a6bff, glow: 0xbf00ff, css: '#9a6bff' }, { body: 0xe6e6e6, glow: 0xaaaaff, css: '#e6e6e6' },
+];
+const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+const NET_BOOT = location.hash.match(/(host|mp)=([A-Z2-9]{5})/);   // auto host/re-join after a reload
+
+function peerIdFor(code) { return 'neonkart-v1-' + code; }
+function newRoomCode() { let s = ''; for (let i = 0; i < 5; i++) s += CODE_CHARS[Math.floor(Math.random() * CODE_CHARS.length)]; return s; }
+function store(k, v) { try { localStorage.setItem('neonkart-' + k, JSON.stringify(v)); } catch (e) {} }
+function recall(k, d) { try { const v = localStorage.getItem('neonkart-' + k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }
+function netClient() { return NET.active && NET.raceOn && !NET.isHost; }
+// Does this game decide what happens to racer r? (yes for my kart; for CPUs only on the host)
+function netOwns(r) {
+  if (!NET.active || !NET.raceOn) return true;
+  return r.kind === 'player' || (r.kind === 'cpu' && NET.isHost);
+}
+function cpuProg(c) { return netClient() && c.prog !== undefined ? c.prog : cpuProgress(c); }
+function myColor() { const me = NET.lobby.find(p => p.id === NET.myId); return HUMAN_COLORS[(me ? me.color : 0) % 8]; }
+function racerById(id) { return id == null ? null : racers().find(r => r.o.netId === id) || null; }
+function safeSend(c, msg) { try { if (c && c.open) c.send(msg); } catch (e) {} }
+function hostForward(msg, exceptId) { for (const [id, c] of NET.conns) if (id !== exceptId) safeSend(c, msg); }
+function netSend(msg) {
+  if (!NET.active || !NET.raceOn) return;
+  msg.from = NET.myId;
+  if (NET.isHost) hostForward(msg, null); else safeSend(NET.hostConn, msg);
+}
+function makePeer(id) {
+  if (typeof Peer === 'undefined') throw new Error('The networking library didn’t load — check your internet connection.');
+  const opts = Object.assign({ debug: 1 }, window.NEONKART_PEER_OPTS || {});
+  return id ? new Peer(id, opts) : new Peer(opts);
+}
+
+// ── Lobby UI ──
+function lobbyShow(view) {
+  document.getElementById('start-overlay').style.display = 'none';
+  const L = document.getElementById('mp-lobby');
+  L.style.display = 'flex';
+  L.dataset.view = view;           // 'join' | 'room'
+}
+function lobbyStatus(text, bad = false) {
+  const el = document.getElementById('mp-status');
+  el.textContent = text; el.classList.toggle('bad', bad);
+}
+function lobbyRender() {
+  document.getElementById('mp-code').textContent = NET.code || '·····';
+  document.getElementById('mp-players').innerHTML = NET.lobby.map(p => {
+    const c = HUMAN_COLORS[p.color % 8].css;
+    const tags = (p.id === NET.lobby[0].id ? ' <i>host</i>' : '') + (p.id === NET.myId ? ' <i>you</i>' : '');
+    return `<li><span class="dot" style="background:${c};box-shadow:0 0 8px ${c}"></span>${escapeHtml(p.name)}${tags}</li>`;
+  }).join('') + `<li class="slots">${NET.lobby.length} / ${NET_MAX_PLAYERS} players</li>`;
+  const S = NET.settings;
+  document.querySelectorAll('#mp-lobby [data-mode]').forEach(b => b.classList.toggle('on', b.dataset.mode === S.mode));
+  document.querySelectorAll('#mp-lobby [data-laps]').forEach(b => b.classList.toggle('on', +b.dataset.laps === S.laps));
+  document.getElementById('mp-summary').textContent =
+    `${S.mode === 'gp' ? 'Grand Prix · CPUs fill the grid' : 'Players only'} · ${S.laps} laps · Track #${TRACK_SEED} (${Math.round(TRACK_LENGTH)} m)`;
+  document.getElementById('mp-lobby').classList.toggle('is-host', NET.isHost);
+  document.getElementById('mp-start').disabled = !NET.isHost || NET.lobby.length < 1;
+}
+function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+function readName() {
+  let n = (document.getElementById('mp-name').value || '').trim().replace(/\s+/g, ' ').slice(0, 12);
+  if (!n) n = 'Racer' + Math.floor(100 + Math.random() * 900);
+  store('name', n);
+  return n;
+}
+function netLeave() {
+  NET.leaving = true;
+  try { if (NET.isHost) hostForward({ k: 'end' }, null); else safeSend(NET.hostConn, { k: 'bye' }); } catch (e) {}
+  setTimeout(() => { try { NET.peer && NET.peer.destroy(); } catch (e) {} location.hash = 'gp-s' + TRACK_SEED; location.reload(); }, 150);
+}
+function netFatal(text) {
+  // something broke mid-race (host gone, etc.)
+  const box = document.getElementById('mp-alert');
+  document.getElementById('mp-alert-text').textContent = text;
+  box.style.display = 'flex';
+}
+
+// ── Hosting ──
+function hostGame(code = null, retries = 0) {
+  NET.active = true; NET.isHost = true; NET.code = code || newRoomCode();
+  NET.name = NET.name || recall('name', 'Host');
+  NET.settings = recall('mp-settings', NET.settings);
+  if (gpMode !== true) setMode('gp');
+  lobbyShow('room'); lobbyRender();
+  lobbyStatus(retries ? 'Re-opening the room…' : 'Opening a room…');
+  let peer;
+  try { peer = makePeer(peerIdFor(NET.code)); } catch (e) { lobbyStatus(e.message, true); return; }
+  NET.peer = peer;
+  peer.on('open', id => {
+    NET.myId = id; kart.netId = id;
+    NET.lobby = [{ id, name: NET.name, color: 0 }];
+    history.replaceState(null, '', `#gp-host=${NET.code}-s${TRACK_SEED}`);
+    lobbyRender();
+    lobbyStatus('Room open — send your friends the code.');
+  });
+  peer.on('connection', conn => hostAccept(conn));
+  peer.on('disconnected', () => { if (!NET.leaving) try { peer.reconnect(); } catch (e) {} });
+  peer.on('error', e => {
+    if (e.type === 'unavailable-id') {
+      // our code is still registered (e.g. right after a reload) — retry, or pick a new code
+      try { peer.destroy(); } catch (x) {}
+      if (code && retries < 8) setTimeout(() => hostGame(code, retries + 1), 1500);
+      else hostGame(null, 0);
+    } else if (e.type !== 'peer-unavailable') {
+      lobbyStatus('Network problem: ' + (e.type || e.message), true);
+    }
+  });
+}
+function hostAccept(conn) {
+  conn.on('data', msg => hostOnData(conn, msg));
+  conn.on('close', () => hostDrop(conn.peer));
+  conn.on('error', () => hostDrop(conn.peer));
+}
+function hostOnData(conn, msg) {
+  if (!msg || typeof msg !== 'object') return;
+  const id = conn.peer;
+  switch (msg.k) {
+    case 'hello': {
+      if (NET.raceOn) { safeSend(conn, { k: 'full', reason: 'That race has already started.' }); setTimeout(() => conn.close(), 300); return; }
+      if (NET.lobby.length >= NET_MAX_PLAYERS && !NET.lobby.some(p => p.id === id)) { safeSend(conn, { k: 'full', reason: 'That room is full.' }); setTimeout(() => conn.close(), 300); return; }
+      const used = new Set(NET.lobby.map(p => p.color));
+      let color = 0; while (used.has(color)) color++;
+      const name = String(msg.name || 'Racer').slice(0, 12);
+      if (!NET.lobby.some(p => p.id === id)) NET.lobby.push({ id, name, color });
+      NET.conns.set(id, conn);
+      safeSend(conn, { k: 'welcome', seed: TRACK_SEED, lobby: NET.lobby, settings: NET.settings });
+      hostForward({ k: 'lobby', lobby: NET.lobby, settings: NET.settings }, id);
+      lobbyRender();
+      lobbyStatus(`${name} joined.`);
+      return;
+    }
+    case 'st': {
+      const r = NET.remotes.find(x => x.netId === id);
+      if (r) pushBuf(r.buf, msg.s);
+      return;
+    }
+    case 'bye': hostDrop(id); return;
+    default:
+      if (NET.raceOn) { applyNetEvent(msg); hostForward(msg, id); }
+  }
+}
+function hostDrop(id) {
+  if (!NET.conns.has(id) && !NET.lobby.some(p => p.id === id)) return;
+  NET.conns.delete(id);
+  const p = NET.lobby.find(x => x.id === id);
+  NET.lobby = NET.lobby.filter(x => x.id !== id);
+  hostForward({ k: 'left', id, lobby: NET.lobby }, null);
+  removeRemote(id);
+  if (!NET.raceOn) lobbyRender();
+  if (p) { if (NET.raceOn) showBanner(`${p.name} LEFT`, 2); else lobbyStatus(`${p.name} left.`); }
+}
+
+// ── Joining ──
+function joinGame(code, retries = 0) {
+  code = (code || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+  if (code.length !== 5) { lobbyStatus('Room codes are 5 letters/numbers.', true); return; }
+  NET.active = true; NET.isHost = false; NET.code = code;
+  NET.name = NET.name || recall('name', 'Racer');
+  lobbyShow('room'); lobbyRender();
+  lobbyStatus(retries ? `Reconnecting to ${code}…` : `Connecting to room ${code}…`);
+  let peer;
+  try { peer = makePeer(); } catch (e) { lobbyStatus(e.message, true); return; }
+  NET.peer = peer;
+  const retry = () => {
+    try { peer.destroy(); } catch (x) {}
+    if (retries < 15) setTimeout(() => joinGame(code, retries + 1), 1500);
+    else { lobbyStatus(`Couldn’t reach room ${code}. Check the code, or ask the host to re-open it.`, true); NET.active = false; }
+  };
+  peer.on('open', id => {
+    NET.myId = id; kart.netId = id;
+    const conn = peer.connect(peerIdFor(code), { reliable: true });
+    NET.hostConn = conn;
+    clearTimeout(NET.joinTimer);
+    NET.joinTimer = setTimeout(() => {
+      if (!NET.lobby.length) lobbyStatus('Still connecting… some networks block direct connections between browsers.', true);
+    }, 12000);
+    conn.on('open', () => safeSend(conn, { k: 'hello', name: NET.name, seed: TRACK_SEED }));
+    conn.on('data', clientOnData);
+    conn.on('close', () => { if (!NET.leaving) netFatal('Lost connection to the host.'); });
+  });
+  peer.on('disconnected', () => { if (!NET.leaving) try { peer.reconnect(); } catch (e) {} });
+  peer.on('error', e => {
+    if (e.type === 'peer-unavailable') retry();
+    else lobbyStatus('Network problem: ' + (e.type || e.message), true);
+  });
+}
+function clientOnData(msg) {
+  if (!msg || typeof msg !== 'object') return;
+  switch (msg.k) {
+    case 'welcome':
+      clearTimeout(NET.joinTimer);
+      if (msg.seed !== TRACK_SEED) {
+        // load the host's track, then come straight back into the room
+        NET.leaving = true;
+        location.hash = `gp-mp=${NET.code}-s${msg.seed}`;
+        location.reload();
+        return;
+      }
+      NET.lobby = msg.lobby; NET.settings = msg.settings;
+      history.replaceState(null, '', `#gp-mp=${NET.code}-s${TRACK_SEED}`);
+      lobbyRender(); lobbyStatus('You’re in! Waiting for the host to start the race…');
+      return;
+    case 'lobby': NET.lobby = msg.lobby; NET.settings = msg.settings; lobbyRender(); return;
+    case 'full': lobbyStatus(msg.reason, true); NET.leaving = true; try { NET.peer.destroy(); } catch (e) {} NET.active = false; return;
+    case 'start': onlineStart(msg); return;
+    case 'snap': applySnapshot(msg); return;
+    case 'left': {
+      const p = NET.lobby.find(x => x.id === msg.id);
+      NET.lobby = msg.lobby || NET.lobby.filter(x => x.id !== msg.id);
+      removeRemote(msg.id);
+      if (NET.raceOn) { if (p) showBanner(`${p.name} LEFT`, 2); } else lobbyRender();
+      return;
+    }
+    case 'reload':
+      NET.leaving = true;
+      setTimeout(() => { location.hash = `gp-mp=${NET.code}-s${msg.seed}`; location.reload(); }, 400 + Math.random() * 600);
+      return;
+    case 'end': NET.leaving = true; netFatal('The host closed the room.'); return;
+    default: if (NET.raceOn) applyNetEvent(msg);
+  }
+}
+
+// ── Starting a race ──
+function hostStartRace() {
+  if (!NET.isHost || NET.raceOn) return;
+  store('mp-settings', NET.settings);
+  const humans = NET.lobby.map(p => ({ id: p.id, name: p.name, color: p.color }));
+  const nCpu = NET.settings.mode === 'gp' ? Math.max(0, 7 - humans.length) : 0;
+  const cpuDefs = CPU_ROSTER.slice().sort(() => Math.random() - 0.5).slice(0, nCpu)
+    .map(d => ({ name: d.name, body: d.body, glow: d.glow }));
+  const total = humans.length + nCpu;
+  const slots = [...Array(total).keys()].sort(() => Math.random() - 0.5);
+  humans.forEach((h, i) => { h.slot = slots[i]; });
+  cpuDefs.forEach((c, i) => { c.slot = slots[humans.length + i]; });
+  const msg = { k: 'start', seed: TRACK_SEED, laps: NET.settings.laps, humans, cpus: cpuDefs };
+  hostForward(msg, null);
+  onlineStart(msg);
+}
+function placeAt(o, slot) {
+  const g = gridSlot(slot);
+  o.pos.copy(g.pos); o.yaw = g.yaw; o.dir.set(Math.sin(g.yaw), 0, Math.cos(g.yaw));
+  const ti = getTrackInfo(o.pos); o.idx = ti.idx; o.lat = ti.lat; o.lastT = ti.t;
+  o.group.position.copy(o.pos); o.group.rotation.set(0, o.yaw, 0);
+}
+function nameTag(text, color) {
+  const cv = document.createElement('canvas'); cv.width = 256; cv.height = 64;
+  const g = cv.getContext('2d');
+  g.fillStyle = 'rgba(0,0,0,0.55)'; g.beginPath();
+  if (g.roundRect) g.roundRect(4, 8, 248, 48, 22); else g.rect(4, 8, 248, 48);
+  g.fill();
+  g.strokeStyle = color; g.lineWidth = 4; g.stroke();
+  g.fillStyle = '#fff'; g.font = 'bold 30px Arial, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.fillText(text, 128, 34);
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(cv), transparent: true, depthWrite: false }));
+  sp.scale.set(3.2, 0.8, 1); sp.position.y = 2.7;
+  return sp;
+}
+function makeRemote(h) {
+  const c = HUMAN_COLORS[h.color % 8];
+  const group = buildKart({ body: c.body, glow: c.glow, bodyEmissive: 0x000000 });
+  scene.add(group);
+  group.add(nameTag(h.name, c.css));
+  const shield = new THREE.Mesh(new THREE.SphereGeometry(2.1, 20, 14), new THREE.MeshBasicMaterial({ color: 0x00f7ff, transparent: true, opacity: 0.22, blending: THREE.AdditiveBlending, depthWrite: false }));
+  shield.position.y = 0.8; shield.visible = false; group.add(shield);
+  const r = { netId: h.id, name: h.name, color: c.css, group, shieldVis: shield, pos: new THREE.Vector3(), yaw: 0,
+    dir: new THREE.Vector3(0, 0, 1), speed: 0, steer: 0, idx: 0, lat: 0, prog: -0.01, finished: false, finishTime: 0,
+    buf: [], gone: false, hideAt: 0 };
+  fx(r);
+  placeAt(r, h.slot);
+  return r;
+}
+function removeRemote(id) {
+  const r = NET.remotes.find(x => x.netId === id);
+  if (r) { r.gone = true; r.group.visible = false; }
+}
+function onlineStart(msg) {
+  NET.raceOn = true;
+  NET.raceStartedAt = performance.now() + 5000;     // countdown grace period
+  document.getElementById('mp-lobby').style.display = 'none';
+  vsMode = false; gpMode = true;
+  GP_LAPS = msg.laps;
+  // CPUs: real AI on the host, puppets driven by the host's updates everywhere else
+  cpus.forEach(c => scene.remove(c.group)); cpus.length = 0;
+  msg.cpus.forEach((d, i) => { const c = makeCpu(d); c.netId = 'cpu' + i; c.buf = []; placeAt(c, d.slot); cpus.push(c); });
+  // me, in my colour
+  const me = msg.humans.find(h => h.id === NET.myId) || msg.humans[0];
+  const col = HUMAN_COLORS[me.color % 8];
+  scene.remove(kartGroup);
+  kartGroup = buildKart({ body: col.body, glow: col.glow, bodyEmissive: 0x000000 });
+  scene.add(kartGroup);
+  PLAYER_GP_SLOT = me.slot;
+  placePlayerOnGrid();
+  // everyone else
+  NET.remotes.forEach(r => scene.remove(r.group));
+  NET.remotes = msg.humans.filter(h => h.id !== NET.myId).map(makeRemote);
+  updateModeLine();
+  document.getElementById('restart-btn').textContent = NET.isHost ? 'RACE AGAIN' : 'WAITING FOR HOST…';
+  document.getElementById('finish-overlay').classList.toggle('net-client', !NET.isHost);
+  startCountdown();
+}
+
+// ── Kart states: 20 updates a second ──
+function pushBuf(buf, s) { buf.push({ t: performance.now(), s }); if (buf.length > 40) buf.shift(); NET.lastHeard = performance.now(); }
+const NET_TIMEOUT_MS = 6000;   // a player who goes quiet this long has dropped out
+function myNetState() {
+  const f = fx(kart);
+  return { x: +kart.pos.x.toFixed(2), z: +kart.pos.z.toFixed(2), ry: +kartGroup.rotation.y.toFixed(3), rz: +kartGroup.rotation.z.toFixed(3),
+    sp: +kart.speed.toFixed(1), p: kart.finished ? GP_LAPS + 1 : +playerProgress().toFixed(4),
+    f: kart.finished ? 1 : 0, ft: +kart.totalTime.toFixed(3), y: +kart.pos.y.toFixed(2),
+    fl: (kart.driftBoost > 0 || f.nitro > 0 ? 1 : 0) | (f.shield > 0 ? 2 : 0) | (kart.jet ? 4 : 0) };
+}
+function netTick(dt) {
+  if (!NET.active || !NET.raceOn) return;
+  const now = performance.now();
+  if (NET.isHost) {
+    // browsers don't always announce a closed tab — drop players who've gone silent
+    for (const r of NET.remotes) {
+      if (r.gone) continue;
+      const last = r.buf.length ? r.buf[r.buf.length - 1].t : NET.raceStartedAt;
+      if (now - last > NET_TIMEOUT_MS && !r.finished) hostDrop(r.netId);
+    }
+  } else if (!NET.leaving && now - (NET.lastHeard || NET.raceStartedAt) > NET_TIMEOUT_MS + 2000) {
+    NET.leaving = true;
+    netFatal('Lost connection to the host.');
+  }
+  NET.sendAcc += dt;
+  if (NET.sendAcc < 0.05) return;
+  NET.sendAcc = 0;
+  const me = myNetState();
+  if (!NET.isHost) { safeSend(NET.hostConn, { k: 'st', s: me }); return; }
+  const h = { [NET.myId]: me };
+  for (const r of NET.remotes) if (!r.gone && r.buf.length) h[r.netId] = r.buf[r.buf.length - 1].s;
+  const c = cpus.map(c => {
+    const f = fx(c);
+    return [+c.pos.x.toFixed(2), +c.pos.z.toFixed(2), +(c.yaw + spinAngle(c)).toFixed(3), +(-c.steer * 5).toFixed(3), +c.speed.toFixed(1),
+      c.finished ? GP_LAPS + 1 : +cpuProgress(c).toFixed(4), c.finished ? 1 : 0, +c.finishTime.toFixed(3), (f.nitro > 0 ? 1 : 0) | (f.shield > 0 ? 2 : 0)];
+  });
+  hostForward({ k: 'snap', h, c }, null);
+}
+function applySnapshot(msg) {
+  for (const id in msg.h) {
+    if (id === NET.myId) continue;
+    const r = NET.remotes.find(x => x.netId === id);
+    if (r) pushBuf(r.buf, msg.h[id]);
+  }
+  msg.c.forEach((a, i) => {
+    const c = cpus[i];
+    if (c) pushBuf(c.buf, { x: a[0], z: a[1], ry: a[2], rz: a[3], sp: a[4], p: a[5], f: a[6], ft: a[7], fl: a[8] });
+  });
+}
+// Move a kart we don't control to where it was ~110 ms ago (smooth even with jittery networks)
+function drivePuppet(o, dt) {
+  const buf = o.buf;
+  if (!buf || !buf.length) return;
+  const rt = performance.now() - NET_INTERP_MS;
+  let a = buf[0], b = buf[0];
+  for (let i = buf.length - 1; i > 0; i--) if (buf[i - 1].t <= rt) { a = buf[i - 1]; b = buf[i]; break; }
+  if (rt > buf[buf.length - 1].t) { a = buf[Math.max(0, buf.length - 2)]; b = buf[buf.length - 1]; }
+  const u = b.t > a.t ? Math.max(0, Math.min(1.25, (rt - a.t) / (b.t - a.t))) : 1;
+  const A = a.s, B = b.s;
+  o.pos.set(A.x + (B.x - A.x) * u, 0, A.z + (B.z - A.z) * u);
+  const ry = lerpAngle(A.ry, B.ry, Math.min(u, 1));
+  o.yaw = ry; o.dir.set(Math.sin(ry), 0, Math.cos(ry));
+  o.speed = B.sp; o.prog = B.p; o.finished = !!B.f; o.finishTime = B.ft;
+  const ti = trackInfoNear(o.pos, o.idx || 0, 90); o.idx = ti.idx; o.lat = ti.lat;
+  const f = fx(o); f.nitro = B.fl & 1 ? 0.2 : 0;
+  const g = o.group;
+  g.position.copy(o.pos);
+  g.position.y = (A.y || 0) + ((B.y || 0) - (A.y || 0)) * Math.min(u, 1);
+  g.rotation.set(-0.04, ry, A.rz + (B.rz - A.rz) * Math.min(u, 1));
+  if ((B.fl & 4) || g.jetpack) animateJetpack(g, !!(B.fl & 4), dt);
+  if (B.fl & 4) jetFlames(o.pos, o.dir, g.position.y);
+  if (g.wheels) g.wheels.forEach(w => { w.rotation.x -= o.speed * dt * 1.5; });
+  if (o.shieldVis) o.shieldVis.visible = !!(B.fl & 2);
+  // finished karts pull off after a moment so they're not in the way
+  if (o.finished && !replay.playing) {
+    if (!o.hideAt) o.hideAt = performance.now() + 2500;
+    if (performance.now() > o.hideAt) g.visible = false;
+  }
+}
+function netUpdatePuppets(dt) {
+  for (const r of NET.remotes) if (!r.gone) drivePuppet(r, dt);
+  if (!NET.isHost) for (const c of cpus) drivePuppet(c, dt);
+}
+// My kart gets nudged by karts I don't control (they're moved by their own games)
+function netLocalBumps(dt) {
+  const MIN_D = 2.4;
+  const others = NET.remotes.filter(r => !r.gone && !r.finished);
+  if (!NET.isHost) others.push(...cpus.filter(c => !c.finished));
+  const movers = kart.finished || kart.alt > 1.2 ? [] : [kart];
+  if (NET.isHost) movers.push(...cpus);          // host-run CPUs bounce off remote players too
+  for (const m of movers) for (const o of others) {
+    if (m === o) continue;
+    const dx = m.pos.x - o.pos.x, dz = m.pos.z - o.pos.z, d = Math.hypot(dx, dz);
+    if (d < MIN_D && d > 0.001) {
+      m.pos.x += dx / d * (MIN_D - d); m.pos.z += dz / d * (MIN_D - d);
+      m.speed *= Math.pow(0.96, dt * 60);
+    }
+  }
+  if (kartGroup) kartGroup.position.copy(kart.pos);
+}
+// Keep the host's CPUs and items running until every player has finished
+function netHostLive() {
+  return NET.active && NET.isHost && NET.raceOn && (gameState === 'racing' || NET.remotes.some(r => !r.gone && !r.finished));
+}
+
+// ── Item events over the network ──
+function spawnMine(p, owner, id) {
+  const ti = getTrackInfo(p);
+  const g = new THREE.Group();
+  const core = new THREE.Mesh(new THREE.SphereGeometry(0.55, 14, 10),
+    new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.7, roughness: 0.3, emissive: 0xff0033, emissiveIntensity: 0.6 }));
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(0.85, 0.08, 6, 24), new THREE.MeshBasicMaterial({ color: 0xff2255 }));
+  ring.rotation.x = Math.PI / 2;
+  g.add(core); g.add(ring);
+  g.position.set(p.x, 0.55, p.z);
+  scene.add(g);
+  const m = { id, pos: p, idx: ti.idx, lat: ti.lat, speed: 0, isMine: true, owner, arm: 0.6, life: 40, mesh: g, core };
+  mines.push(m);
+  return m;
+}
+function spawnOrb(s, lat, target, owner, life, id) {
+  const mesh = new THREE.Group();
+  mesh.add(new THREE.Mesh(new THREE.SphereGeometry(0.45, 14, 10),
+    new THREE.MeshStandardMaterial({ color: 0xff66ff, emissive: 0xff00ff, emissiveIntensity: 2 })));
+  mesh.add(new THREE.Mesh(new THREE.SphereGeometry(0.9, 14, 10),
+    new THREE.MeshBasicMaterial({ color: 0xff44ff, transparent: true, opacity: 0.3, blending: THREE.AdditiveBlending, depthWrite: false })));
+  scene.add(mesh);
+  const o = { id, s, lat, target, owner, life, mesh };
+  orbs.push(o);
+  return o;
+}
+function newProjId() { return (NET.myId || 'local') + ':' + (++NET.projSeq); }
+function removeProj(id) {
+  if (!id) return;
+  for (const arr of [mines, orbs]) {
+    const i = arr.findIndex(p => p.id === id);
+    if (i >= 0) { burst(arr[i].mesh.position, 16); scene.remove(arr[i].mesh); arr.splice(i, 1); }
+  }
+}
+function applyNetEvent(msg) {
+  switch (msg.k) {
+    case 'cube': {
+      const c = cubes[msg.i];
+      if (c && c.respawn <= 0) { c.respawn = CUBE_RESPAWN; c.mesh.visible = false; burst(c.pos, 12, 0.5); }
+      return;
+    }
+    case 'mine': { const o = racerById(msg.owner); spawnMine(new THREE.Vector3(msg.x, 0, msg.z), o ? o.o : null, msg.id); return; }
+    case 'orb': {
+      const o = racerById(msg.owner), t = racerById(msg.target);
+      spawnOrb(msg.s, msg.lat, t ? t.o : null, o ? o.o : null, msg.life, msg.id);
+      return;
+    }
+    case 'hit': {
+      removeProj(msg.proj);
+      const v = racerById(msg.v);
+      if (v && !netOwns(v)) hitRacer(v, msg.type, racerById(msg.by), null, true, msg.blocked);
+      return;
+    }
+    case 'storm': {
+      const by = racerById(msg.by);
+      for (const r of racers()) if (netOwns(r) && r.o.netId !== msg.by && r.p > msg.p && !r.o.finished && !(r.kind === 'player' && kart.finished))
+        hitRacer(r, 'storm', by);
+      return;
+    }
+  }
+}
+
+// ── Start screen / lobby wiring ──
+function netWireUI() {
+  const nameEl = document.getElementById('mp-name');
+  nameEl.value = recall('name', '');
+  document.getElementById('mp-host').addEventListener('click', () => { NET.name = readName(); hostGame(); });
+  document.getElementById('mp-join-open').addEventListener('click', () => {
+    NET.name = readName(); lobbyShow('join'); lobbyStatus('Type the room code your friend sent you.');
+    setTimeout(() => document.getElementById('mp-join-code').focus(), 50);
+  });
+  const doJoin = () => joinGame(document.getElementById('mp-join-code').value);
+  document.getElementById('mp-join-go').addEventListener('click', doJoin);
+  document.getElementById('mp-join-code').addEventListener('keydown', e => { if (e.key === 'Enter') doJoin(); });
+  document.getElementById('mp-leave').addEventListener('click', netLeave);
+  document.getElementById('mp-alert-btn').addEventListener('click', netLeave);
+  document.getElementById('mp-start').addEventListener('click', hostStartRace);
+  document.getElementById('mp-copy').addEventListener('click', () => {
+    try { navigator.clipboard.writeText(NET.code); lobbyStatus('Code copied!'); } catch (e) { lobbyStatus('Code: ' + NET.code); }
+  });
+  document.querySelectorAll('#mp-lobby [data-mode]').forEach(b => b.addEventListener('click', () => {
+    if (!NET.isHost) return; NET.settings.mode = b.dataset.mode; store('mp-settings', NET.settings);
+    hostForward({ k: 'lobby', lobby: NET.lobby, settings: NET.settings }, null); lobbyRender();
+  }));
+  document.querySelectorAll('#mp-lobby [data-laps]').forEach(b => b.addEventListener('click', () => {
+    if (!NET.isHost) return; NET.settings.laps = +b.dataset.laps; store('mp-settings', NET.settings);
+    hostForward({ k: 'lobby', lobby: NET.lobby, settings: NET.settings }, null); lobbyRender();
+  }));
+}
+function netBoot() {
+  netWireUI();
+  // background tabs stop animating; keep saying "still here" about once a second
+  setInterval(() => { if (document.hidden && NET.active && NET.raceOn) { NET.sendAcc = 1; netTick(0); } }, 1000);
+  // say goodbye when the tab closes so the others aren't left waiting
+  window.addEventListener('pagehide', () => {
+    if (!NET.active || NET.leaving) return;
+    if (NET.isHost) hostForward({ k: 'end' }, null); else safeSend(NET.hostConn, { k: 'bye' });
+  });
+  if (!NET_BOOT) return;
+  NET.name = recall('name', 'Racer');
+  if (NET_BOOT[1] === 'host') hostGame(NET_BOOT[2], 1);
+  else joinGame(NET_BOOT[2], 1);
+}
+// Host: start a fresh race for everyone (same track or a new one)
+function netRestart(newTrack) {
+  if (!NET.isHost) return;
+  const seed = newTrack ? 1 + Math.floor(Math.random() * 999999) : TRACK_SEED;
+  NET.leaving = true;
+  hostForward({ k: 'reload', seed }, null);
+  setTimeout(() => { try { NET.peer.destroy(); } catch (e) {} location.hash = `gp-host=${NET.code}-s${seed}`; location.reload(); }, 300);
+}
+
+// ── Animation Loop ────────────────────────────────
+let lastTime = 0;
+function animate(now = 0) {
+  requestAnimationFrame(animate);
+  const dt = Math.min((now - lastTime) / 1000, 0.05);
+  lastTime = now;
+
+  if (paused) {
+    renderer.render(scene, camera);
+    return;
+  }
+
+  smokeParticles.update(dt);
+  driftParticles.update(dt);
+
+  if (gameState === 'countdown') updateCinematic();
+  updateKart(dt);
+  updateRival(dt);
+  updateCpus(dt);
+  updateItems(dt);
+  recordReplayFrame(dt);
+  updateReplay(dt);
+  netTick(dt);
+  updateHUD(dt);
+  updateMinimap();
+
+  renderer.render(scene, camera);
+}
+
+init();
+netBoot();
+</script>
+</body>
+</html>
