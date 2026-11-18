@@ -20,7 +20,7 @@ const NAV_ITEMS = [
     {
         page: 'blog.html',
         label: 'Blog',
-        svg: '<svg width="20" height="20" viewBox="0 0 20 20"><path d="M2 4a2 2 0 012-2h3.5a1 1 0 01.8.4l1.4 1.8a1 1 0 00.8.4H16a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V4z"/><path d="M7 9l-1.5 1L7 11M13 9l1.5 1L13 11" stroke="currentcolor" stroke-width="1.2" fill="none"/></svg>',
+        svg: '<svg width="20" height="20" viewBox="0 0 20 20"><path d="M2 4a2 2 0 012-2h3.5a1 1 0 01.8.4l1.4 1.8a1 1 0 00.8.4H16a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V4z"/></svg>',
     },
     {
         page: 'contact.html',
