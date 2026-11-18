@@ -18,8 +18,8 @@ const NAV_ITEMS = [
         svg: '<svg width="20" height="20" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M6 6V5a3 3 0 013-3h2a3 3 0 013 3v1h2a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V8a2 2 0 012-2h2zm2-1a1 1 0 011-1h2a1 1 0 011 1v1H8V5zM9 13a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1z" clip-rule="evenodd"/></svg>',
     },
     {
-        page: 'projects.html',
-        label: 'Projects',
+        page: 'blog.html',
+        label: 'Blog',
         svg: '<svg width="20" height="20" viewBox="0 0 20 20"><path d="M2 4a2 2 0 012-2h3.5a1 1 0 01.8.4l1.4 1.8a1 1 0 00.8.4H16a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V4z"/><path d="M7 9l-1.5 1L7 11M13 9l1.5 1L13 11" stroke="currentcolor" stroke-width="1.2" fill="none"/></svg>',
     },
     {
@@ -54,3 +54,83 @@ function buildNav() {
 }
 
 document.addEventListener('DOMContentLoaded', buildNav);
+
+
+
+
+
+
+(function () {
+    // Top-to-bottom order of your pages. Edit to match your nav.
+    var ORDER = ['index', 'about', 'experience', 'campus', 'blog', 'contact'];
+    var DURATION = 450;
+    var SHIFT = '40vh'; // how far the page slides vertically
+
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    function pageName(path) {
+        var file = path.split('/').pop().replace('.html', '');
+        return file === '' ? 'index' : file;
+    }
+
+    // Everything in <body> that moves: skip scripts and fixed elements (the nav)
+    function movers() {
+        return Array.prototype.filter.call(document.body.children, function (el) {
+            if (el.tagName === 'SCRIPT' || el.tagName === 'STYLE') return false;
+            return getComputedStyle(el).position !== 'fixed';
+        });
+    }
+
+    function slide(els, from, to, done) {
+        var last;
+        els.forEach(function (el) {
+            last = el.animate(
+                [
+                    { transform: 'translateY(' + from + ')', opacity: from === '0px' ? 1 : 0 },
+                    { transform: 'translateY(' + to + ')', opacity: to === '0px' ? 1 : 0 }
+                ],
+                { duration: DURATION, easing: 'cubic-bezier(.4,0,.2,1)', fill: 'forwards' }
+            );
+        });
+        if (last && done) last.onfinish = done;
+        else if (done) done();
+    }
+
+    // Slide IN on arrival
+    document.addEventListener('DOMContentLoaded', function () {
+        var dir = sessionStorage.getItem('slideDir');
+        sessionStorage.removeItem('slideDir');
+        if (!dir) return;
+        document.documentElement.style.overflowY = 'hidden';
+        // Going down the nav: new page rises up from below. Going up: drops in from above.
+        slide(movers(), dir === '1' ? SHIFT : '-' + SHIFT, '0px', function () {
+            document.documentElement.style.overflowY = '';
+        });
+    });
+
+    // Slide OUT on click
+    document.addEventListener('click', function (e) {
+        var a = e.target.closest('a[href]');
+        if (!a || e.defaultPrevented || e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+        if (a.target === '_blank' || a.origin !== location.origin) return;
+        if (!/\.html$|\/$/.test(a.pathname)) return;
+
+        var from = ORDER.indexOf(pageName(location.pathname));
+        var to = ORDER.indexOf(pageName(a.pathname));
+        if (to === -1 || from === to) return;
+
+        e.preventDefault();
+        var dir = to > from ? 1 : -1; // 1 = going down the nav
+        sessionStorage.setItem('slideDir', String(dir));
+        document.documentElement.style.overflowY = 'hidden';
+        // Going down: current page moves up and out. Going up: moves down and out.
+        slide(movers(), '0px', (dir === 1 ? '-' : '') + SHIFT, function () {
+            window.location.href = a.href;
+        });
+    });
+
+    // Back/forward cache: reset if the browser restores a slid-out page
+    window.addEventListener('pageshow', function (e) {
+        if (e.persisted) location.reload();
+    });
+})();

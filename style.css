@@ -1038,6 +1038,10 @@ a:active {
     50% { opacity: 0.35; }
 }
 
+.desc {
+    margin-left: 3%;
+}
+
 .hero-headline {
     font-size: clamp(2.1rem, 5.5vw, 3.6rem);
     font-weight: 700;
