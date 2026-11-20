@@ -1160,3 +1160,33 @@ a:active {
         gap: 1.25rem 2rem;
     }
 }
+
+.posts {
+  list-style: none;
+  max-width: 1100px;
+  margin: 3rem auto;
+  /* padding: 0 2rem; */
+}
+
+.post {
+  display: grid;
+  grid-template-columns: 140px 1fr;  /* date column, then title column */
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.post time {
+  color: #999;
+  font-size: 0.95rem;
+}
+
+.post a {
+  justify-self: start;        /* pill hugs the text instead of stretching */
+  padding: 0.6rem 1rem;
+  border-radius: 4px;
+  color: #eee;
+  text-decoration: none;
+  font-size: 1.3rem;
+}
+
+.post a:hover { filter: brightness(1.25); }
